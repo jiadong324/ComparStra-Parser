@@ -173,7 +173,7 @@ tabix ./pav.flye.sorted.vcf.gz
 
 #### Truvari evaluation
 
-**NOTE:** We do not consider genotype accuracy for benchmarking
+**NOTE:** We do not consider genotype accuracy for benchmarking and the Truvari version was v3.0.0.
 
 For SVs at true INS/DEL regions ([download link](https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_SVs_Integration_v0.6/))
 
