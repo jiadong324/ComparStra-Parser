@@ -13,14 +13,8 @@
 
 
 import os
-import pandas as pd
-import vcf
 from intervaltree import IntervalTree
-from math import pi
-import matplotlib.pylab as plt
 import scipy as sc
-
-from Helpers.Constant import *
 
 def make_autopct(values):
     def my_autopct(pct):
@@ -123,3 +117,59 @@ def contains_gaps(chrom, start, end, ref):
             in_gap = True
             break
     return in_gap
+
+def annotate_sv_region(chrom, start, end, pcrt_thresh, simreps_tabix, rmsk_tabix, sd_tabix):
+    if start > end:
+        start, end = end, start
+    size = end - start + 1
+    annotations = []
+
+    if 'chr' not in chrom:
+        chrom = f'chr{chrom}'
+
+    for simrep in simreps_tabix.fetch(chrom, start, end):
+        entries = simrep.strip().split('\t')
+        rp_start, rp_end, rp_info = int(entries[1]), int(entries[2]), entries[3]
+        overlap_size = get_overlaps(start, end, rp_start, rp_end)
+
+        if overlap_size > 0:
+            motif = rp_info.split(',')[-1]
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            subtype = 'VNTR' if len(motif) >= 7 else 'STR'
+            if overlap_pcrt >= pcrt_thresh:
+                annotations.append(('Tandem Repeats', subtype, overlap_pcrt))
+                return ('Tandem Repeats', subtype, overlap_pcrt)
+
+
+    for rmsk in rmsk_tabix.fetch(chrom, start, end):
+        entries = rmsk.strip().split('\t')
+        rp_start, rp_end, rp_info = int(entries[1]), int(entries[2]), entries[4]
+        overlap_size = get_overlaps(start, end, rp_start, rp_end)
+        if overlap_size > 0:
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            rptype = rp_info.split(',')[11]
+            if overlap_pcrt >= pcrt_thresh:
+                if rptype == 'Simple_repeat':
+                    motif = rptype[1: -2]
+                    subtype = 'VNTR' if len(motif) >= 7 else 'STR'
+                    annotations.append(('Tandem Repeats', subtype, overlap_pcrt))
+                    return ('Tandem Repeats', subtype, overlap_pcrt)
+                annotations.append(('Repeat Masked', rptype, overlap_pcrt))
+
+    for sd in sd_tabix.fetch(chrom, start, end):
+        entries = sd.strip().split('\t')
+        sd_start, sd_end, sd_mate_coord = int(entries[1]), int(entries[2]), entries[3]
+        overlap_size = get_overlaps(start, end, sd_start, sd_end)
+        if overlap_size > 0:
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            annotations.append(('Segment Dup', 'SegDup', overlap_pcrt))
+
+    if len(annotations) == 0:
+        return ('Simple Region', 'None', 0)
+
+    sorted_annotations = sorted(annotations, key=lambda x:x[1], reverse=True)
+
+    return sorted_annotations[0]
+
+def get_overlaps(a_start, a_end, b_start, b_end):
+    return max(0, min(a_end, b_end) - max(a_start, b_start))

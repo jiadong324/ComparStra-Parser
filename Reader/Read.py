@@ -21,10 +21,9 @@ from Helpers.Annot import *
 from Helpers.Constant import *
 
 
-def process_read_calls(datasets, aligners, max_size):
-    exclude_dict = parse_exclude_regions(EXREGIONS)
-    passed_regions = parse_exclude_regions(TRUEINSDEL)
+def process_read_calls():
 
+    exclude_dict = parse_exclude_regions(EXREGIONS)
     ref_file = pysam.FastaFile(HG19REF)
 
     simple_reps = pysam.Tabixfile(SIMREP, 'r')
@@ -38,8 +37,8 @@ def process_read_calls(datasets, aligners, max_size):
     svs_in_region = []
 
     for caller in CALLERS:
-        for dataset in datasets:
-            for aligner in aligners:
+        for dataset in DATASETS:
+            for aligner in ALIGNERS:
                 current_dir = f'{WORKDIR}/{caller}/{aligner}_{dataset}'
 
                 filtered_dir = f'{current_dir}/filtered'
@@ -51,7 +50,7 @@ def process_read_calls(datasets, aligners, max_size):
 
                 split_svtypes_prefix = f'HG002.{caller}'
 
-                count_dict, svtype_by_region = split_svtypes_to_files(vcf_path, filtered_vcf_path, caller, -1, max_size, exclude_dict,
+                count_dict, svtype_by_region = split_svtypes_to_files(vcf_path, filtered_vcf_path, caller, -1, exclude_dict,
                                                     ref_file, filtered_dir, split_svtypes_prefix, simple_reps, rmsk, sds)
 
                 all_svs, exbnds, ins_num, del_num, inv_num, dup_num, bnd_num = count_dict['Total'], count_dict['Exbnd'], \
@@ -66,23 +65,6 @@ def process_read_calls(datasets, aligners, max_size):
                     for svtype, count in sv_num.items():
                         svtype_region.append((caller, dataset, aligner, region, svtype, count))
 
-                # cmrg_dir = f'{current_dir}/{aligner}_{dataset}/filtered_in_cmrg'
-                # if not os.path.exists(cmrg_dir):
-                #     os.mkdir(cmrg_dir)
-                #
-                # cmrg_svs, cmrg_svtypes = get_svs_in_cmrg(filtered_vcf_path, split_svtypes_prefix, cmrg_dir, cmrg_regions)
-                # svs_in_region.append((caller, dataset, aligner, 'CMRG', cmrg_svs))
-
-
-                high_conf_dir = f'{current_dir}/filtered_in_highconf'
-                if not os.path.exists(high_conf_dir):
-                    os.mkdir(high_conf_dir)
-
-                passed_svs, passed_svtypes = get_svs_in_passed(filtered_vcf_path, split_svtypes_prefix, high_conf_dir, passed_regions)
-                svs_in_region.append((caller, dataset, aligner, 'TRUE-INS/DEL', passed_svs))
-
-
-
     count_writer.close()
 
     df_svcounts = pd.DataFrame(svtype_region, columns=['caller', 'dataset', 'aligner', 'region', 'svtype', 'count'])
@@ -92,7 +74,7 @@ def process_read_calls(datasets, aligners, max_size):
     df_svregions.to_csv(f'{WORKDIR}/caller_sv_in_ture_insdel.tsv', sep='\t', header=True, index=False)
 
 
-def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, max_size, exclude_dict, ref_file, output_dir, output_prefix, simrep, rmsk, sds):
+def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, exclude_dict, ref_file, output_dir, output_prefix, simrep, rmsk, sds):
 
     re_tag_caller = ['sniffles', 'cutesv']
     filtered_sv_list = []
@@ -101,6 +83,7 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, max_size, exclud
 
     del_writer = open(f'{output_dir}/{output_prefix}.del.vcf', 'w')
     ins_writer = open(f'{output_dir}/{output_prefix}.ins.vcf', 'w')
+
     inv_writer = open(f'{output_dir}/{output_prefix}.inv.vcf', 'w')
     others_writer = open(f'{output_dir}/{output_prefix}.others.vcf', 'w')
     bnd_writer = open(f'{output_dir}/{output_prefix}.bnd.vcf', 'w')
@@ -108,10 +91,6 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, max_size, exclud
 
     exbnd_bed_writer = open(f'{output_dir}/{output_prefix}.exbnd.bed', 'w')
 
-    # ins_counter = 0
-    # del_counter = 0
-    # inv_counter = 0
-    # other_counter = 0
     bnd_counter = 0
 
     svtypes = ['INS', 'DEL', 'DUP', 'INV']
@@ -173,7 +152,7 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, max_size, exclud
                 if "INS" in sv_type:
                     end = start + sv_len
 
-                if sv_len < 50 or sv_len >= max_size:
+                if sv_len < 50 or sv_len >= MAXSIZE:
                     filtered_sv_list.append((chrom, start, end, sv_len))
                     continue
 
@@ -188,7 +167,7 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, max_size, exclud
                 svtype_by_region[region][sv_type] += 1
                 svtype_count[sv_type] += 1
 
-                if "INS" in sv_type:
+                if "INS" in sv_type or "DUP" in sv_type:
                     info_strs = ''
                     for key, val in info_dict.items():
                         if key == 'END':
@@ -201,21 +180,18 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, max_size, exclud
                     new_vcf_str = f'{str1}\t{info_strs}\t{str2}'
 
                     print(new_vcf_str, file=noalt_vcf_writer)
+                    print(new_vcf_str, file=ins_writer)
 
 
-                else:
-                    print(line.strip(), file=noalt_vcf_writer)
-
-                print(f'{chrom}\t{start}\t{end}\t{sv_type}\t{sv_len}\t{region}\t{rptype}\t{round(pcrt, 2)}', file=exbnd_bed_writer)
-
-                if sv_type == 'INS' or sv_type == 'DUP':
-                    print(line.strip(), file=ins_writer)
+                    print(f'{chrom}\t{start}\t{end}\t{sv_type}\t{sv_len}\t{region}\t{rptype}\t{round(pcrt, 2)}', file=exbnd_bed_writer)
 
                 elif sv_type == 'DEL':
                     print(line.strip(), file=del_writer)
+                    print(line.strip(), file=noalt_vcf_writer)
 
                 elif sv_type == 'INV':
                     print(line.strip(), file=inv_writer)
+                    print(line.strip(), file=noalt_vcf_writer)
 
             elif sv_type == 'TRA' or sv_type == 'BND':
                 bnd_counter += 1
@@ -243,126 +219,118 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, max_size, exclud
     return count_dict, svtype_by_region
 
 
-def get_svs_in_passed(noalt_vcf, output_prefix, outdir, region_dict):
+def merge_reads_insdel():
+    caller_supp = 5
 
-    svtypes = ['INS', 'DEL', 'DUP', 'INV']
-    vcf_writer = open(f'{outdir}/{output_prefix}.vcf', 'w')
-    counter = 0
-    svtype_num = {svtype: 0 for svtype in svtypes}
+    simple_reps = pysam.Tabixfile(SIMREP, 'r')
+    rmsk = pysam.Tabixfile(RMSK, 'r')
+    sds = pysam.Tabixfile(SD, 'r')
 
-    with open(noalt_vcf, 'r') as f:
+    for dataset in DATASETS:
+        plat = 'HiFi'
+        if 'ont' in dataset:
+            plat = 'ONT'
+
+        for svtype in ['ins', 'del']:
+            sr4_caller_vcfs = f'{WORKDIR}/{plat}/{dataset}_callers_sr4_vcf_path.txt'
+            sr4_caller_writer = open(sr4_caller_vcfs, 'w')
+
+            for caller in CALLERS:
+                vcf_path = f'{WORKDIR}/{plat}/minimap2_{dataset}/filtered/HG002.{caller}.{svtype}.vcf'
+
+                print(vcf_path, file=sr4_caller_writer)
+
+            sr4_caller_writer.close()
+
+            merged_caller_dir = f'{WORKDIR}/{plat}/read_callers_merged'
+
+            print(f' ==== Merge {svtype} on {dataset} ==== ')
+            caller_sr4_merged_vcf = f'{merged_caller_dir}/{dataset}_{svtype}_callers_minimap2_merged.vcf'
+            cmd = f'{JASMINE} file_list={sr4_caller_vcfs} out_file={caller_sr4_merged_vcf} max_dist=1000 --dup_to_ins ' \
+                  f'genome_file={HG19REF} samtools_path={SAMTOOLS} spec_len=50 spec_reads=1'
+
+            os.system(cmd)
+            os.remove(sr4_caller_vcfs)
+            obtain_confident_calls(caller_sr4_merged_vcf, merged_caller_dir, dataset, svtype, caller_supp, simple_reps,
+                                   rmsk, sds)
+
+
+def obtain_confident_calls(merged_vcf, workdir, dataset, svtype, supp_callers, simple_reps, rmsk, sds):
+    suppvec_dict = {}
+    merged_total = 0
+    extd_supp_vec_dict = {}
+
+    suppvec_info = {}
+    extd_suppvec_info = {}
+
+    extd_merged_vcf = open(f'{workdir}/{dataset}_{svtype}_callers_minimap2_merged.extd.vcf', 'w')
+    scs_merged_vcf = open(f'{workdir}/{dataset}_{svtype}_callers_minimap2_merged.sc{supp_callers}.vcf', 'w')
+    scs_extd_merged_vcf = open(f'{workdir}/{dataset}_{svtype}_callers_minimap2_merged.sc{supp_callers}.extd.vcf', 'w')
+
+    with open(merged_vcf, 'r') as f:
         for line in f:
             if '#' in line:
-                print(line.strip(), file=vcf_writer)
-                continue
-            entries = line.strip().split("\t")
-            chrom, start, sv_id = entries[0], int(entries[1]), entries[2]
-
-            if chrom not in AUTOSOMES:
+                print(line.strip(), file=extd_merged_vcf)
+                print(line.strip(), file=scs_merged_vcf)
+                print(line.strip(), file=scs_extd_merged_vcf)
                 continue
 
-            if entries[4][0] == '[' or entries[4][0] == ']':
-                chr2 = entries[4][1: -2].split(':')[0]
-                if chr2 not in AUTOSOMES:
-                    continue
-            if entries[4][-1] == ']' or entries[4][-1] == '[':
-                chr2 = entries[4][2: -1].split(':')[0]
-                if chr2 not in AUTOSOMES:
-                    continue
-
+            entries = line.strip().split('\t')
             info_tokens = entries[7].split(";")
             info_dict = {}
+            merged_total += 1
 
             for token in info_tokens:
-                if "=" not in token:
-                    continue
-                info_dict[token.split("=")[0]] = token.split("=")[1].replace(">", "")
+                if '=' in token:
+                    info_dict[token.split('=')[0]] = token.split('=')[1]
 
-            sv_type = info_dict["SVTYPE"]
-            if 'DUP' in sv_type:
-                sv_type = 'DUP'
+            supp = int(info_dict['SUPP'])
+            supp_vec = info_dict['SUPP_VEC']
+            callers = []
+            for i, val in enumerate(supp_vec):
+                if val == '1':
+                    callers.append(TOOLMAP[CALLERS[i]])
 
-            if sv_type in svtypes:
-                end = int(info_dict["END"])
-                sv_len = end - start
-                if "SVLEN" in info_dict:
-                    sv_len = abs(int(info_dict["SVLEN"]))
+            merged_id = entries[2]
 
-                if "INS" in sv_type:
-                    end = start + sv_len
+            suppvec_info[merged_id] = ','.join(callers)
 
-                if region_dict[chrom].overlap(start, end):
-                    counter += 1
+            if supp_vec in suppvec_dict:
+                suppvec_dict[supp_vec] += 1
+            else:
+                suppvec_dict[supp_vec] = 1
 
-                    if sv_type in svtype_num:
-                        svtype_num[sv_type] += 1
-                    else:
-                        svtype_num[sv_type] = 1
-                    print(line.strip(), file=vcf_writer)
+            merged_type = info_dict['SVTYPE']
 
-    vcf_writer.close()
-    return counter, svtype_num
+            end = int(info_dict['END'])
+            if merged_type == 'INS':
+                end = int(entries[1]) + int(info_dict['SVLEN'])
 
-def get_svs_in_cmrg(noalt_vcf, output_prefix, outdir, region_dict):
+            region_label, rptype, pcrt = annotate_sv_region(entries[0], int(entries[1]), end, 0, simple_reps, rmsk, sds)
 
+            if region_label != 'Tandem Repeats':
+                print(line.strip(), file=extd_merged_vcf)
 
-    svtypes = ['INS', 'DEL', 'DUP', 'INV']
-    vcf_writer = open(f'{outdir}/{output_prefix}.vcf', 'w')
-    counter = 0
-    svtype_num = {svtype: 0 for svtype in svtypes}
+                extd_suppvec_info[merged_id] = ','.join(callers)
 
-    with open(noalt_vcf, 'r') as f:
-        for line in f:
-            if '#' in line:
-                print(line.strip(), file=vcf_writer)
-                continue
-            entries = line.strip().split("\t")
-            chrom, start, sv_id = entries[0], int(entries[1]), entries[2]
+                if supp_vec in extd_supp_vec_dict:
+                    extd_supp_vec_dict[supp_vec] += 1
+                else:
+                    extd_supp_vec_dict[supp_vec] = 1
 
-            if chrom not in AUTOSOMES:
-                continue
+            if supp >= supp_callers:
+                print(line.strip(), file=scs_merged_vcf)
+                if region_label != 'Tandem Repeats':
+                    print(line.strip(), file=scs_extd_merged_vcf)
 
-            if entries[4][0] == '[' or entries[4][0] == ']':
-                chr2 = entries[4][1: -2].split(':')[0]
-                if chr2 not in AUTOSOMES:
-                    continue
-            if entries[4][-1] == ']' or entries[4][-1] == '[':
-                chr2 = entries[4][2: -1].split(':')[0]
-                if chr2 not in AUTOSOMES:
-                    continue
+    supp_writer = open(f'{workdir}/{dataset}_{svtype}_callers_minimap2_merged_suppinfo.txt', 'w')
+    for supp, count in suppvec_dict.items():
+        print(f'{supp}\t{count}', file=supp_writer)
 
-            info_tokens = entries[7].split(";")
-            info_dict = {}
+    supp_writer.close()
 
-            for token in info_tokens:
-                if "=" not in token:
-                    continue
-                info_dict[token.split("=")[0]] = token.split("=")[1].replace(">", "")
+    extd_supp_writer = open(f'{workdir}/{dataset}_{svtype}_callers_minimap2_merged_suppinfo.extd.txt', 'w')
+    for supp, count in extd_supp_vec_dict.items():
+        print(f'{supp}\t{count}', file=extd_supp_writer)
 
-            sv_type = info_dict["SVTYPE"]
-            if 'DUP' in sv_type:
-                sv_type = 'DUP'
-
-            if sv_type in svtypes:
-
-                end = int(info_dict["END"])
-                sv_len = end - start
-                if "SVLEN" in info_dict:
-                    sv_len = abs(int(info_dict["SVLEN"]))
-
-                if "INS" in sv_type:
-                    end = start + sv_len
-
-                if region_dict[chrom].overlap(start, end):
-                    counter += 1
-
-                    if sv_type in svtype_num:
-                        svtype_num[sv_type] += 1
-                    else:
-                        svtype_num[sv_type] = 1
-
-                    print(line.strip(), file=vcf_writer)
-
-    vcf_writer.close()
-
-    return counter, svtype_num
+    extd_supp_writer.close()

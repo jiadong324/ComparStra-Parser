@@ -11,7 +11,7 @@
 
 '''
 
-## PKL-workpath
+## Workpath
 WORKDIR = '/home/jdlin/evaluate_caller/HG002/hs37d5'
 EXREGIONS = '/home/jdlin/data/genome/grch37/grch37.exclude_regions_cen.bed'
 HG19REF = '/home/jdlin/data/genome/grch37/hs37d5.fa'
@@ -30,3 +30,15 @@ SVTYPEMAP = {'ins': 'INS', 'del': 'DEL', 'others': 'Others', 'inv': 'INV', 'dup'
 GENOMICREGIONS = ['Tandem Repeats', 'Repeat Masked', 'Segment Dup', 'Simple Region']
 CALLERS = ['pbsv', 'svim', 'cutesv', 'sniffles', 'svision']
 ASMCALLERS = ['pav', 'svimasm']
+ALIGNERS = ['minimap2', 'ngmlr', 'lra', 'winnowmap']
+DATASETS = ['hifi_10kb', 'hifi_15kb', 'hifi_18kb', 'ont_9kb', 'ont_19kb', 'ont_30kb']
+
+TOOLMAP = {'pav': 'PAV', 'pbsv': 'pbsv', 'svim':'SVIM', 'cutesv': 'cuteSV', 'svision': 'SVision', 'sniffles':
+    'Sniffles', 'nanovar': 'NanoVar', 'com': 'PAV', 'svimasm': 'SVIM-asm'}
+
+MAXSIZE = 100000
+
+## Tool path
+
+JASMINE = ''
+SAMTOOLS = ''
