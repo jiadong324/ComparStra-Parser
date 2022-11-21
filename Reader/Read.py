@@ -219,7 +219,7 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, exclude_dict, re
     return count_dict, svtype_by_region
 
 
-def merge_reads_insdel():
+def obtain_reads_hq_insdel():
     caller_supp = 5
 
     simple_reps = pysam.Tabixfile(SIMREP, 'r')

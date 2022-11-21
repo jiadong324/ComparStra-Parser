@@ -32,6 +32,10 @@ CALLERS = ['pbsv', 'svim', 'cutesv', 'sniffles', 'svision']
 ASMCALLERS = ['pav', 'svimasm']
 ALIGNERS = ['minimap2', 'ngmlr', 'lra', 'winnowmap']
 DATASETS = ['hifi_10kb', 'hifi_15kb', 'hifi_18kb', 'ont_9kb', 'ont_19kb', 'ont_30kb']
+DATASET_DICT = {'HiFi': ['hifi_10kb', 'hifi_15kb', 'hifi_18kb'], 'ONT': ['ont_9kb', 'ont_19kb', 'ont_30kb']}
+
+HiFiASSEMBLERS = ['hifiasm', 'flye']
+ONTASSEMBLERS = ['shasta', 'flye']
 
 TOOLMAP = {'pav': 'PAV', 'pbsv': 'pbsv', 'svim':'SVIM', 'cutesv': 'cuteSV', 'svision': 'SVision', 'sniffles':
     'Sniffles', 'nanovar': 'NanoVar', 'com': 'PAV', 'svimasm': 'SVIM-asm'}

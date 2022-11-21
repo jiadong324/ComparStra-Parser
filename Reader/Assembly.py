@@ -11,7 +11,7 @@
 
 '''
 
-
+import pysam
 import gzip
 import pandas as pd
 
@@ -308,7 +308,7 @@ def split_svimasm_vcf(datasets, assemblers, sv_counts_info, sv_counts_by_regions
     df_svnum_regions = pd.DataFrame(sv_counts_by_regions, columns=['assembler', 'dataset', 'region', 'svtype', 'count'])
     df_svnum_regions.to_csv(f'{WORKDIR}/svimasm_sv_counts_region.tsv', sep='\t', header=True, index=False)
 
-def merge_assm_insdel():
+def obtain_assm_hq_insdel():
 
     caller_supp = 2
 

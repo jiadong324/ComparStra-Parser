@@ -173,3 +173,34 @@ def annotate_sv_region(chrom, start, end, pcrt_thresh, simreps_tabix, rmsk_tabix
 
 def get_overlaps(a_start, a_end, b_start, b_end):
     return max(0, min(a_end, b_end) - max(a_start, b_start))
+
+
+def write_suppvec_info(merged_vcf, supp_info_out):
+
+    suppvec_dict = {}
+    merged_total = 0
+    with open(merged_vcf, 'r') as f:
+        for line in f:
+            if '#' in line:
+                continue
+            entries = line.strip().split('\t')
+            info_tokens = entries[7].split(";")
+            info_dict = {}
+            merged_total += 1
+
+            for token in info_tokens:
+                if '=' in token:
+                    info_dict[token.split('=')[0]] = token.split('=')[1]
+
+            supp = info_dict['SUPP_VEC']
+            if supp in suppvec_dict:
+                suppvec_dict[supp] += 1
+            else:
+                suppvec_dict[supp] = 1
+
+    writer = open(supp_info_out, 'w')
+
+    print(f'Total\t{merged_total}', file=writer)
+    for supp, count in suppvec_dict.items():
+        print(f'{supp}\t{count}', file=writer)
+    writer.close()
