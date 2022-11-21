@@ -108,10 +108,6 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, max_size, exclud
 
     exbnd_bed_writer = open(f'{output_dir}/{output_prefix}.exbnd.bed', 'w')
 
-    # ins_counter = 0
-    # del_counter = 0
-    # inv_counter = 0
-    # other_counter = 0
     bnd_counter = 0
 
     svtypes = ['INS', 'DEL', 'DUP', 'INV']
