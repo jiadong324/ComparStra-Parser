@@ -11,11 +11,7 @@
 
 '''
 
-import pysam
 import vcf
-
-from Helpers.Constant import *
-
 
 def annotate_sv_region(chrom, start, end, pcrt_thresh, simreps_tabix, rmsk_tabix, sd_tabix):
     if start > end:

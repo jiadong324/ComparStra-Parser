@@ -11,46 +11,57 @@
 
 '''
 
-
-from Reader.Assm import *
+from Reader.Assembly import *
 from Reader.Read import *
 
-
-from Helpers.Constant import *
-
+from Com.Callers import compare_stra_callers
+from Com.Datasets import compare_assm_among_datasets, compare_read_among_datasets
+from Com.Aligners import compare_between_aligners
+from Com.Assemblers import compare_between_assemblers
+from Com.StraHQ import compare_stra_hq_insdel
 
 def main():
 
-    max_size = 100000
-    datasets = ['hifi_10kb', 'hifi_15kb', 'hifi_18kb', 'ont_9kb', 'ont_19kb', 'ont_30kb']
-    aligners = ['minimap2', 'ngmlr', 'lra', 'winnowmap']
-    hifi_datasets = ['hifi_10kb', 'hifi_15kb', 'hifi_18kb']
-    ont_datasets = ['ont_9kb', 'ont_19kb', 'ont_30kb']
 
-    ont_assemblers = ['shasta', 'flye']
-    hifi_assemblers = ['hifiasm', 'flye']
+    #############################################
+    ## Processing raw VCF files of each caller ##
+    ## Outputs are used to create Fig. 2a      ##
+    #############################################
 
-    '''
-        Process raw calls of each caller
-    '''
+    process_read_calls()
+    process_assembly_calls()
 
-    process_read_calls(datasets, aligners, max_size)
-    # process_assm_calls(WORKDIR, max_size)
+    ###############################################################
+    ## Impact of dataset, aligner and assembler on each strategy ##
+    ## Outputs are used to create Fig. 2b-2g                     ##
+    ###############################################################
 
-    # assm_binned_tree, assm_binned_list = create_bins()
+    compare_assm_among_datasets()
+    compare_read_among_datasets()
 
-    # annotate_read_highconf_svs(iMACDIR, datasets, aligners)
-    # annotate_assm_highconf_svs(iMACDIR, ont_datasets, ont_assemblers)
-    # annotate_assm_highconf_svs(iMACDIR, hifi_datasets, hifi_assemblers)
+    compare_between_aligners()
+    compare_between_assemblers()
 
 
-    '''
-        Merge FNs/FPs at CMRGs
-        1. Merge all caller FNs of each dataset (stra.dataset.fn.merged.vcf).
-        2. Obtain all-caller-fn of each dataset (xxx.HiFi.all-caller-fn.merged.vcf, xxx.ONT.all-caller-fn.merged.vcf).
-        3. Merge all-caller-fn among all datasets (stra.HiFi.fn.merged.vcf, stra.ONT.fn.merged.vcf)
-    '''
-    # merge_cmrg(f'{iMAC}/HG002/CMRGs/truvari_results', dataset_dict, 'fp')
+    ##############################################################################################
+    ## Impact of aligner and assembler on SVs captured by read-based and assembly-based callers ##
+    ## Outputs are used to create Fig. 3a-3c                                                    ##
+    ##############################################################################################
+
+    compare_stra_callers()
+
+
+    ################################################################
+    ## Obtain and compare high-confident insertions and deletions ##
+    ## Outputs are used to create Fig. 3e-f and Fig. 4            ##
+    ################################################################
+
+    obtain_reads_hq_insdel()
+    obtain_assm_hq_insdel()
+
+    compare_stra_hq_insdel()
+
+
 
 if __name__ == '__main__':
     main()
