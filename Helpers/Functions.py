@@ -123,3 +123,68 @@ def contains_gaps(chrom, start, end, ref):
             in_gap = True
             break
     return in_gap
+
+def get_survivor_supp(merged_vcf):
+
+    supp_dict = {}
+    merged_total = 0
+    with open(merged_vcf, 'r') as f:
+        for line in f:
+            if '#' in line:
+                continue
+            entries = line.strip().split('\t')
+            try:
+                info_tokens = entries[7].split(";")
+                info_dict = {}
+                merged_total += 1
+
+                for token in info_tokens:
+                    if '=' in token:
+                        info_dict[token.split('=')[0]] = token.split('=')[1]
+
+                supp = int(info_dict['SUPP'])
+                if supp in supp_dict:
+                    supp_dict[supp] += 1
+                else:
+                    supp_dict[supp] = 1
+            except Exception:
+                print(line)
+
+    return supp_dict, merged_total
+
+def get_survivor_suppvec(merged_vcf):
+
+    suppvec_dict = {}
+    merged_total = 0
+    with open(merged_vcf, 'r') as f:
+        for line in f:
+            if '#' in line:
+                continue
+            entries = line.strip().split('\t')
+            info_tokens = entries[7].split(";")
+            info_dict = {}
+            merged_total += 1
+
+            for token in info_tokens:
+                if '=' in token:
+                    info_dict[token.split('=')[0]] = token.split('=')[1]
+
+            supp = info_dict['SUPP_VEC']
+            if supp in suppvec_dict:
+                suppvec_dict[supp] += 1
+            else:
+                suppvec_dict[supp] = 1
+
+    return suppvec_dict, merged_total
+
+def read_suppvec_info(supp_info):
+    suppvec_dict = {}
+    total = 0
+    with open(supp_info, 'r') as f:
+        for line in f:
+            entries = line.strip().split('\t')
+            if entries[0] == 'Total':
+                total = int(entries[1])
+            else:
+                suppvec_dict[entries[0]] = int(entries[1])
+    return suppvec_dict, total
