@@ -37,8 +37,6 @@ plt.rcParams["axes.linewidth"] = 2
 def suppfig1a(workdir, datasets, aligners):
 
     ins_pcrt = []
-    del_pcrt = []
-
     sv_count_list = []
     align_sv_count = pd.read_csv(f'{workdir}/caller_sv_count.tsv', header=[0], sep='\t')
 
@@ -50,7 +48,6 @@ def suppfig1a(workdir, datasets, aligners):
             plat = 'ONT'
 
         ins_pcrt.append((TOOLMAP[caller], aligner, PLATMAP[dataset], ins_num * 100 / all_sv_num, plat, 'Read-based'))
-        # del_pcrt.append((TOOLMAP[caller], aligner, PLATMAP[dataset], del_num * 100 / all_sv_num, plat, 'Read-based'))
         sv_count_list.append((TOOLMAP[caller], PLATMAP[dataset], all_sv_num, plat, 'Read-based'))
 
     pav_sv_count = pd.read_csv(f'{workdir}/pav_sv_counts.tsv', header=[0], sep='\t')
@@ -63,7 +60,6 @@ def suppfig1a(workdir, datasets, aligners):
         sv_count_list.append((TOOLMAP[caller], PLATMAP[dataset], svcount, plat, 'Assembly-based'))
 
         ins_pcrt.append((TOOLMAP[caller], assembler, PLATMAP[dataset], ins_num * 100 / svcount, plat, 'Assembly-based'))
-        # del_pcrt.append((TOOLMAP[caller], assembler, PLATMAP[dataset], del_num * 100 / svcount, plat, 'Assembly-based'))
 
     svimasm_sv_count = pd.read_csv(f'{workdir}/svimasm_sv_counts.tsv', header=[0], sep='\t')
     for idx, row in svimasm_sv_count.iterrows():
@@ -74,7 +70,6 @@ def suppfig1a(workdir, datasets, aligners):
         sv_count_list.append((TOOLMAP[caller], PLATMAP[dataset], svcount, plat, 'Assembly-based'))
 
         ins_pcrt.append((TOOLMAP[caller], assembler, PLATMAP[dataset], ins_num * 100 / svcount, plat, 'Assembly-based'))
-        # del_pcrt.append((TOOLMAP[caller], assembler, PLATMAP[dataset], del_num * 100 / svcount, plat, 'Assembly-based'))
 
     df_ins_pcrt = pd.DataFrame(ins_pcrt, columns=['caller', 'aa', 'dataset', 'pcrt', 'plat', 'stra'])
     assemblers = ['hifiasm', 'flye', 'shasta']
