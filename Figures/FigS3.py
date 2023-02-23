@@ -217,41 +217,46 @@ def suppfig3b(workdir, datasets):
 def suppfig3c(workdir, datasets, aligners):
 
     svtypes = ['INS', 'DEL', 'INV', 'DUP']
-
-    # svtypes_pcrt = {aligner: [] for aligner in aligners}
-    svtypes_pcrt = {'HiFi': [], 'ONT': []}
     for dataset_idx, dataset in enumerate(datasets):
         plat = 'HiFi'
         if 'ont' in dataset:
             plat = 'ONT'
 
-        for j, caller in enumerate(CALLERS):
-            unique_info_out = f'{workdir}/{plat}/{dataset}_aligner_repro/{caller}.aligner-unique.tsv'
-            df_unique = pd.read_csv(unique_info_out, sep='\t', header=[0])
-
-            this_total = {aligner: 0 for aligner in aligners}
-            svtypes_count = {aligner: {svtype: 0 for svtype in svtypes} for aligner in aligners}
-            for idx, row in df_unique.iterrows():
-                svtype, svlen, aligner, sv_region = row['TYPE_MATCH'], abs(int(row['SVLEN'])), row['CALLER'], row['REGION_TYPE']
-
-                this_total[aligner] += 1
-                if svtype in svtypes:
-                    svtypes_count[aligner][svtype] += 1
-
-            for aligner, region_counts in svtypes_count.items():
-                for svtype, counts in region_counts.items():
-                    svtypes_pcrt[plat].append((aligner, dataset, caller, svtype, counts / this_total[aligner] * 100))
-
-    for plat, pcrt_list in svtypes_pcrt.items():
-        df_svtypes_pcrt = pd.DataFrame(pcrt_list, columns=['aligner', 'dataset', 'caller', 'svtype', 'pcrt'])
         fig, ax = plt.subplots(1, 1, figsize=(5, 4))
 
-        sns.boxplot(data=df_svtypes_pcrt, x='svtype', y='pcrt', hue='aligner', palette=['#1b9e77','#d95f02', '#7570b3', '#e7298a'], ax=ax)
+        svtypes_pcrt = []
+        this_total = {aligner: 0 for aligner in aligners}
+        svtypes_count = {aligner: {svtype: 0 for svtype in svtypes} for aligner in aligners}
 
-        ax.set_ylabel('% of read aligner unique SV types', fontsize=13)
-        ax.set_ylim([0, 90])
-        ax.set_yticks(np.linspace(0, 90, 4))
-        ax.set_yticklabels([int(ele) for ele in np.linspace(0, 90, 4)], fontsize=12)
+        for i in range(len(aligners)):
+            for j in range(len(aligners)):
+                if j <= i:
+                    continue
+                for caller in CALLERS:
+                    unique_info_out = f'{workdir}/{plat}/{dataset}_aligner_repro/pw_aligner_repro/{caller}/{caller}.{aligners[i]}-{aligners[j]}.unique.tsv'
+                    df_unique = pd.read_csv(unique_info_out, sep='\t', header=[0])
+
+                    for idx, row in df_unique.iterrows():
+                        svtype, svlen, aligner, sv_region = row['TYPE_MATCH'], abs(int(row['SVLEN'])), row['ALIGNER'], \
+                                                            row['REGION_TYPE']
+
+                        this_total[aligner] += 1
+                        if svtype in svtypes:
+                            svtypes_count[aligner][svtype] += 1
+
+        for aligner, region_counts in svtypes_count.items():
+            for svtype, counts in region_counts.items():
+                svtypes_pcrt.append((aligner, dataset, svtype, counts / this_total[aligner] * 100))
+
+        df_svtypes_pcrt = pd.DataFrame(svtypes_pcrt, columns=['aligner', 'dataset', 'svtype', 'pcrt'])
+
+        sns.barplot(data=df_svtypes_pcrt, x='svtype', y='pcrt', hue='aligner',
+                    palette=['#1b9e77', '#d95f02', '#7570b3', '#e7298a'], ax=ax)
+
+        ax.set_ylabel('% of read aligner specific SV types', fontsize=13)
+        ax.set_ylim([0, 80])
+        ax.set_yticks(np.linspace(0, 80, 5))
+        ax.set_yticklabels([int(ele) for ele in np.linspace(0, 80, 5)], fontsize=12)
 
         ax.set_xlabel('')
         ax.set_xticks([0, 1, 2, 3])
@@ -262,4 +267,5 @@ def suppfig3c(workdir, datasets, aligners):
         ax.grid(axis='y', ls='--', color='grey', lw=1.5)
 
         fig.tight_layout()
-        plt.show()
+
+    plt.show()

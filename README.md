@@ -67,7 +67,7 @@ zcat $fastq | lra align -ONT $ref /dev/stdin -t $thread -p s --printMD -SkipH
 
 ```
 
-### Sequence assembly and alignment
+### Genome assembly
 
 #### flye
 
@@ -91,11 +91,20 @@ flye --nano-raw
 hifiasm -o output.tag -l1 input.fqs input.fqs_untag
 ```
 
-#### Assembly alignment
+### Assembly alignment
 
+#### minimap2
 The alignment parameters are used in PAV.
 ```
 minimap2 -x asm20 -m 10000 -z 10000,50 -r 50000 --end-bonus=100 --secondary=no -O 5,56 -E 4,1 -B 5 -a --eqx -Y
+```
+#### LRA
+
+
+```
+lra global -CONTIG $ref
+lra align $ref $hap1 -CONTIG -p s -t $thread > ./hap1.sam
+lra align $ref $hap2 -CONTIG -p s -t $thread > ./hap2.sam
 ```
 
 ### SV detection
