@@ -10,12 +10,15 @@
 @time: 2023/2/21
 
 '''
+import os
+import sys
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from matplotlib.patches import Patch
-from matplotlib.lines import Line2D
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from Helpers.Functions import *
 from Helpers.Constant import *
@@ -35,7 +38,7 @@ plt.rcParams["ytick.labelsize"] = 11
 plt.rcParams["axes.linewidth"] = 2
 
 
-def suppfig3a(workdir):
+def plot_s6a(figdir):
     datasets_dict = {'HiFi': ['hifi_10kb', 'hifi_15kb', 'hifi_18kb'], 'ONT': ['ont_9kb', 'ont_19kb' , 'ont_30kb']}
 
     datasets_labels = ['hifi_10kb', 'hifi_15kb', 'hifi_18kb', 'ont_9kb', 'ont_19kb', 'ont_30kb']
@@ -53,7 +56,7 @@ def suppfig3a(workdir):
             for dataset in datasets:
                 for svtype in ['ins', 'del']:
                     suppvec_dict = {}
-                    for line in open(f'{workdir}/{plat}/stra_compare_hq/{region_type}/{dataset}.{svtype}.suppvec_info.{region_type}.tsv'):
+                    for line in open(f'{WORKDIR}/{plat}/fig3d3e3f_tmpfile/stra_hq_compare/{region_type}/{dataset}.{svtype}.suppvec_info.{region_type}.tsv'):
                         entries = line.strip().split('\t')
                         suppvec, count = entries[0], int(entries[1])
                         suppvec_dict[suppvec] = count
@@ -98,15 +101,16 @@ def suppfig3a(workdir):
         ax.spines['right'].set_visible(False)
 
     fig.tight_layout()
-    plt.show()
+    fig.savefig(f'{figdir}/figs6a.pdf')
+    # plt.show()
 
-def suppfig3b(workdir):
-    datasets_dict = {'HiFi': ['hifi_10kb', 'hifi_15kb', 'hifi_18kb'], 'ONT': ['ont_9kb', 'ont_19kb' , 'ont_30kb']}
+def plot_s6b(figdir):
+    # datasets_dict = {'HiFi': ['hifi_10kb', 'hifi_15kb', 'hifi_18kb'], 'ONT': ['ont_9kb', 'ont_19kb' , 'ont_30kb']}
 
     hq_svnums = []
 
     for region_type in ['WGS', 'ExTD']:
-        for plat, datasets in datasets_dict.items():
+        for plat, datasets in DATASET_DICT.items():
             assembly_unique = {'del': [], 'ins': []}
             overlaps = {'del': [], 'ins': []}
             read_unique = {'del': [], 'ins': []}
@@ -117,7 +121,7 @@ def suppfig3b(workdir):
             for dataset in datasets:
                 for svtype in ['ins', 'del']:
                     suppvec_dict = {}
-                    for line in open(f'{workdir}/{plat}/stra_compare_hq/{region_type}/{dataset}.{svtype}.suppvec_info.{region_type}.tsv'):
+                    for line in open(f'{WORKDIR}/{plat}/fig3d3e3f_tmpfile/stra_hq_compare/{region_type}/{dataset}.{svtype}.suppvec_info.{region_type}.tsv'):
                         entries = line.strip().split('\t')
                         suppvec, count = entries[0], int(entries[1])
                         suppvec_dict[suppvec] = count
@@ -164,16 +168,19 @@ def suppfig3b(workdir):
             ax.spines['top'].set_visible(False)
             ax.spines['right'].set_visible(False)
             fig.tight_layout()
+            fig.savefig(f'{figdir}/figs6b-{region_type}-{plat}.pdf')
 
-    plt.show()
+    # plt.show()
 
-def suppfig3c(workdir, samples):
+def plot_s6c(figdir):
 
     datasets_dict = {'HiFi': 'hifi_18kb', 'ONT': 'ont_30kb'}
 
     invalid_counter = {'HiFi': {'del': 0, 'ins': 0}, 'ONT': {'del': 0, 'ins': 0}}
     valid_total = {'HiFi': {'del': 0, 'ins': 0}, 'ONT': {'del': 0, 'ins': 0}}
     uniques_total = {'HiFi': {'del': 0, 'ins': 0}, 'ONT': {'del': 0, 'ins': 0}}
+
+    samples = ['HG003', 'HG004']
 
     for plat, dataset in datasets_dict.items():
         fig, axes = plt.subplots(1, 2, sharex='col', sharey='row', figsize=(6, 4))
@@ -182,7 +189,7 @@ def suppfig3c(workdir, samples):
             trio_valid_qs = {}
             total_valid_svs = 0
             for sample_idx, sample in enumerate(samples):
-                with open(f'{workdir}/{plat}/stra_compare_hq/ExTD/trio_validation/vapor_{svtype}_{sample}.tsv', 'r') as f:
+                with open(f'{WORKDIR}/{plat}/ExTD_hq_trio_validation/vapor_{svtype}_{sample}.tsv', 'r') as f:
                     next(f)
                     for line in f:
                         entries = line.strip().split('\t')
@@ -229,5 +236,21 @@ def suppfig3c(workdir, samples):
             axes[svtype_idx].text(.25, .6, f'{SVTYPEMAP[svtype]} FDR={error_rate}%', fontsize=12, transform=axes[svtype_idx].transAxes)
 
         fig.tight_layout()
+        fig.savefig(f'{figdir}/figs6c-{plat}.pdf')
 
-    plt.show()
+    # plt.show()
+
+def main():
+    print('\n==== Creating Extended Data Fig 6 =====')
+
+    if not os.path.exists(f'{FIGDIR}/FigS6'):
+        os.mkdir(f'{FIGDIR}/FigS6')
+
+    print(f'All panels are under: {FIGDIR}/FigS6')
+
+    plot_s6a(f'{FIGDIR}/FigS6')
+    plot_s6b(f'{FIGDIR}/FigS6')
+    plot_s6c(f'{FIGDIR}/FigS6')
+
+if __name__ == '__main__':
+    main()

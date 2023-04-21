@@ -16,7 +16,6 @@ Evaluating the impact of assemblers, aligners, sequencer and read length on read
 
 ## Analysis workflow
 
-
 ### Overview 
 
 The major parts involved in the comparison are listed below:
@@ -25,173 +24,118 @@ The major parts involved in the comparison are listed below:
 3. Based on the analysis of 2, we build high-confident insertions and deletions (insdel) callsets of read and assembly. The high-confident insdel callsets are then compared.
 4. Benchmarking 20 read-based and eight assembly-based detection piplines with well curate SVs of HG002 released by GIAB.
 
-### Reads alignment
+Please check the wiki page for more details about [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
 
-#### minimap2
-```
-## HiFi
-minimap2 -a -H -k 19 -O 5,56 -E 4,1 -A 2 -B 5 -z 400,50 -r 2000 -g 5000 -Y --MD 
 
-## ONT
-minimap2 -a -z 600,200 -x map-ont -Y --MD 
-```
+### Analysis environment
 
-#### ngmlr
+#### Required files
 
-```
-## HiFi
-ngmlr -x pacbio
+**NOTE:** Please specify the working directory and the path of required files in ```Constant.py```.
 
-## ONT
-ngmlr -x ont
-```
+Hg19 reference genome hs37d5.fa.
+Hg19 excluded regions grch37.exclude_regions_cen.bed.
 
-#### winnowmap
+Please refer [CAMPHOR](https://github.com/afujimoto/CAMPHOR) to download and process the original repeat files. The files listed below will be used in the analysis.
+
+1) Simple repeat file including STR and VNTR (simplerepeat.bed.gz). 
+2) Segmental duplication file (seg_dup.bed.gz).
+3) Repeat masker file including LINE, SINE and etc (rmsk.bed.gz).
+
+#### Required tools and packages
 
 ```
-## HiFi
-winnowmap -W ./repetitive_k15.txt -ax map-pb -Y --MD
+## Tools
+Jasmine=1.1.4
+Samtools=1.9
 
-## ONT
-winnowmap -W ./repetitive_k15.txt -ax map-ont -Y --MD
+## Python packages
+python=3.6
+pandas=1.1.5
+numpy=1.19.5
+seaborn=0.11.1
+pysam=0.15.3
+matplotlib_venn=0.11.7
+intervaltree=3.1.0
 ```
 
-#### lra
+#### Create environment for data analysis
 
 ```
-## HiFi
-zcat $fastq | lra align -CCS $ref /dev/stdin -t $thread -p s --printMD -SkipH 
+## Create a python environment
+conda create -n py36 python=3.6
+conda activate py36
 
-## ONT
-zcat $fastq | lra align -ONT $ref /dev/stdin -t $thread -p s --printMD -SkipH
+## Install required packages
+pip install seaborn==0.11.1
+pip install matplotlib-venn==0.11.9
+pip install pysam==0.15.3
+pip install intervaltree==3.1.0
 
-```
-
-### Genome assembly
-
-#### flye
-
-```
-## HiFi
-flye --pacbio-hifi
-
-## ONT
-flye --nano-raw
-```
-
-#### shasta
+## Install Jasmine
+conda config --add channels bioconda
+conda config --add channels conda-forge
+conda install jasminesv
 
 ```
-./shasta-Linux-0.8.0 --config Nanopore-Oct2021
+
+### Reproducing results
+
+
+**NOTE:** Please run the scripts by the order listed below. 
+
+#### Figure 2
+```
+## Figure 2a
+python ./Figure2/Figure2a.py
+## Figure 2b and 2c
+python ./Figure2/Figure2bc.py
+## Figure 2d, 2e, 2f and 2g
+python ./Figure2/Figure2defg.py
 ```
 
-#### hifiasm
-
+#### Figure 3
 ```
-hifiasm -o output.tag -l1 input.fqs input.fqs_untag
-```
-
-### Assembly alignment
-
-#### minimap2
-The alignment parameters are used in PAV.
-```
-minimap2 -x asm20 -m 10000 -z 10000,50 -r 50000 --end-bonus=100 --secondary=no -O 5,56 -E 4,1 -B 5 -a --eqx -Y
-```
-#### LRA
-
-
-```
-lra global -CONTIG $ref
-lra align $ref $hap1 -CONTIG -p s -t $thread > ./hap1.sam
-lra align $ref $hap2 -CONTIG -p s -t $thread > ./hap2.sam
+## Figure 3a, 3b and 3c
+python ./Figure3/Figure3abc.py
+## Figure 3d, 3e and 3f
+python ./Figure3/Figure3def.py
 ```
 
-### SV detection
-
-
-For all read-based callers, the minimum number of support read is set to 1, 2, 5 and 5 for 5X, 10X, 20X and 35X coverage data, respectively
-
-#### pbsv
-
-Minimum number of support read is set with parameters ```-A``` and ```-O```.
+#### Figure 4
 ```
-pbsv discover
-pbsv call -m 50 -A 5 -O 5 -S 0
+## Figure 4a, 4b, 4c and 4d
+python ./Figure4/Figure4.py
 ```
 
-#### SVIM
-
-Minimum number of support read is set with bcftools command ``` bcftools view -i "SUPPORT >= X" ```.
+#### Figure 5
 ```
-svim alignment --cluster_max_distance 1.4 --min_sv_size 50 
-
-## Minimum number of support read 2 for 10X and 20X coverage data
-bcftools view -i "SUPPORT >= 5" variants.vcf > HG002.svim.s5.vcf
+## Figure 5a, 5b, 5c, 5d, 5e and 5f
+python ./Figure5/Figure5.py
 ```
 
-#### cuteSV
-
-Minimum number of support read is set with parameter ```-s```.
-```
-## HiFi
-cuteSV --min_size 50 -t 6 --max_cluster_bias_INS 1000 --diff_ratio_merging_INS 0.9 --max_cluster_bias_DEL 1000 --diff_ratio_merging_DEL 0.5 -s 5
-
-## ONT
-cuteSV --min_size 50 -t 6 --max_cluster_bias_INS 100 --diff_ratio_merging_INS 0.3 --max_cluster_bias_DEL 100 --diff_ratio_merging_DEL 0.3  -s 5 
-```
-
-#### SVision
-
-Minimum number of support read is set with parameter ```-s```.
-```
-SVision -n HG002 -s 5
-```
-
-#### Sniffles
-
-Minimum number of support read is set with parameter ```--minsupport```.
-```
-sniffles --minsvlen 50 --minsupport 5
-```
-
-#### PAV
+#### Extended Data Figures
 
 ```
-snakemake -s Snakefile  -j 28  -k --ri >sublog 2>&1 &
+## Extended Data Fig 1
+python ./SuppFig/FigS1.py
+
+## Extended Data Fig 2
+python ./SuppFig/FigS2.py
+
+## Extended Data Fig 3
+python ./SuppFig/FigS3.py
+
+## Extended Data Fig 4
+python ./SuppFig/FigS4.py
+
+## Extended Data Fig 5
+python ./SuppFig/FigS5.py
+
+## Extended Data Fig 6
+python ./SuppFig/FigS6.py
+
+## Extended Data Fig 7
+python ./SuppFig/FigS7.py
 ```
 
-#### SVIM-asm
-
-```
-svim-asm diploid --tandem_duplications_as_insertions --interspersed_duplications_as_insertions 
-```
-
-### HG002 benchmarking
-
-#### Post-processing
-
-Example of create compressed and indexed VCF file for further evaluation.
-```
-cat HG002.pav.flye.vcf| awk '$1 ~ /^#/ {print $0;next} {print $0 | "sort -k1,1 -k2,2n"}' | bgzip -c > ./pav.flye.sorted.vcf.gz
-tabix ./pav.flye.sorted.vcf.gz
-```
-**NOTE:** 
-1. For PAV output, the header for SVLEN should be changed to ```<Number=1,Type=Integer>```
-1. For SVision output, the ```Covered``` in the filter column should be replaced with ```PASS```
-
-#### Truvari evaluation
-
-**NOTE:** We do not consider genotype accuracy for benchmarking and the Truvari version was v3.0.0.
-
-For SVs at true INS/DEL regions ([download link](https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/analysis/NIST_SVs_Integration_v0.6/))
-
-```
-truvari bench -f ./hs37d5.fa -b ./HG002_SVs_Tier1_v0.6.vcf.gz --includebed ./HG002_SVs_Tier1_v0.6.bed --passonly --giabreport -r 1000 -p 0.00 -c /pav.flye.sorted.vcf.gz -o pav_flye
-```
-
-For SV at CMRGs ([download link](https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/release/AshkenazimTrio/HG002_NA24385_son/CMRG_v1.00/GRCh37/StructuralVariant/))
-
-```
-truvari bench -f ./hs37d5.fa -b ./HG002_GRCh37_CMRG_SV_v1.00.vcf.gz --includebed ./HG002_GRCh37_CMRG_SV_v1.00.bed --passonly --giabreport -r 1000 -p 0.00 -c /pav.flye.sorted.vcf.gz -o pav_flye
-```

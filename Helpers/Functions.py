@@ -11,16 +11,10 @@
 
 '''
 
-
 import os
-import pandas as pd
-import vcf
 from intervaltree import IntervalTree
-from math import pi
-import matplotlib.pylab as plt
 import scipy as sc
 
-from Helpers.Constant import *
 
 def make_autopct(values):
     def my_autopct(pct):
@@ -177,6 +171,10 @@ def get_survivor_suppvec(merged_vcf):
 
     return suppvec_dict, merged_total
 
+def get_overlaps(a_start, a_end, b_start, b_end):
+    return max(0, min(a_end, b_end) - max(a_start, b_start))
+
+
 def read_suppvec_info(supp_info):
     suppvec_dict = {}
     total = 0
@@ -188,3 +186,33 @@ def read_suppvec_info(supp_info):
             else:
                 suppvec_dict[entries[0]] = int(entries[1])
     return suppvec_dict, total
+
+def write_suppvec_info(merged_vcf, supp_info_out):
+
+    suppvec_dict = {}
+    merged_total = 0
+    with open(merged_vcf, 'r') as f:
+        for line in f:
+            if '#' in line:
+                continue
+            entries = line.strip().split('\t')
+            info_tokens = entries[7].split(";")
+            info_dict = {}
+            merged_total += 1
+
+            for token in info_tokens:
+                if '=' in token:
+                    info_dict[token.split('=')[0]] = token.split('=')[1]
+
+            supp = info_dict['SUPP_VEC']
+            if supp in suppvec_dict:
+                suppvec_dict[supp] += 1
+            else:
+                suppvec_dict[supp] = 1
+
+    writer = open(supp_info_out, 'w')
+
+    print(f'Total\t{merged_total}', file=writer)
+    for supp, count in suppvec_dict.items():
+        print(f'{supp}\t{count}', file=writer)
+    writer.close()

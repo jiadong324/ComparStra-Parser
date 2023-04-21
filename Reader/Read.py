@@ -10,14 +10,10 @@
 @time: 2022/9/26
 
 '''
-
-
 import pandas as pd
 import pysam
-import gzip
 
 from Helpers.Functions import *
-from Helpers.Annot import *
 from Helpers.Constant import *
 
 
@@ -34,28 +30,34 @@ def process_read_calls():
     print('caller\tdataset\taligner\tall_num\tins_num\tdel_num\tinv_num\tdup_num\tbnd_num', file=count_writer)
 
     svtype_region = []
-    svs_in_region = []
 
-    for caller in CALLERS:
+    for caller in READCALLERS:
         for dataset in DATASETS:
-            for aligner in ALIGNERS:
-                current_dir = f'{WORKDIR}/{caller}/{aligner}_{dataset}'
+            platform = 'HiFi'
+            if 'ont' in dataset:
+                platform = 'ONT'
+
+            for aligner in READALIGNERS:
+                current_dir = f'{WORKDIR}/{platform}/{aligner}_{dataset}'
 
                 filtered_dir = f'{current_dir}/filtered'
                 if not os.path.exists(filtered_dir):
                     os.mkdir(filtered_dir)
 
-                vcf_path = f'{current_dir}/HG002.{caller}.s5.vcf'
+                vcf_path = f'{current_dir}/raw_calls/HG002.{caller}.s5.vcf'
                 filtered_vcf_path = f'{filtered_dir}/HG002.{caller}.vcf'
 
                 split_svtypes_prefix = f'HG002.{caller}'
 
-                count_dict, svtype_by_region = split_svtypes_to_files(vcf_path, filtered_vcf_path, caller, -1, exclude_dict,
-                                                    ref_file, filtered_dir, split_svtypes_prefix, simple_reps, rmsk, sds)
+                count_dict, svtype_by_region = split_svtypes_to_files(vcf_path, filtered_vcf_path, caller, -1,
+                                                                      exclude_dict,
+                                                                      ref_file, filtered_dir, split_svtypes_prefix,
+                                                                      simple_reps, rmsk, sds)
 
                 all_svs, exbnds, ins_num, del_num, inv_num, dup_num, bnd_num = count_dict['Total'], count_dict['Exbnd'], \
-                                                                         count_dict['INS'], count_dict['DEL'], \
-                                                                         count_dict['INV'], count_dict['DUP'],count_dict['BND']
+                                                                               count_dict['INS'], count_dict['DEL'], \
+                                                                               count_dict['INV'], count_dict['DUP'], \
+                                                                               count_dict['BND']
 
                 print(f'{caller}\t{dataset}\t{aligner}\t{all_svs}\t{ins_num}\t{del_num}\t{inv_num}\t{dup_num}\t{bnd_num}', file=count_writer)
 
@@ -69,9 +71,6 @@ def process_read_calls():
 
     df_svcounts = pd.DataFrame(svtype_region, columns=['caller', 'dataset', 'aligner', 'region', 'svtype', 'count'])
     df_svcounts.to_csv(f'{WORKDIR}/caller_sv_counts_region.tsv', sep='\t', header=True, index=False)
-
-    df_svregions = pd.DataFrame(svs_in_region, columns=['caller', 'dataset', 'aligner', 'region_class', 'count'])
-    df_svregions.to_csv(f'{WORKDIR}/caller_sv_in_ture_insdel.tsv', sep='\t', header=True, index=False)
 
 
 def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, exclude_dict, ref_file, output_dir, output_prefix, simrep, rmsk, sds):
@@ -182,9 +181,6 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, exclude_dict, re
                     print(new_vcf_str, file=noalt_vcf_writer)
                     print(new_vcf_str, file=ins_writer)
 
-
-                    print(f'{chrom}\t{start}\t{end}\t{sv_type}\t{sv_len}\t{region}\t{rptype}\t{round(pcrt, 2)}', file=exbnd_bed_writer)
-
                 elif sv_type == 'DEL':
                     print(line.strip(), file=del_writer)
                     print(line.strip(), file=noalt_vcf_writer)
@@ -193,6 +189,8 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, exclude_dict, re
                     print(line.strip(), file=inv_writer)
                     print(line.strip(), file=noalt_vcf_writer)
 
+                print(f'{chrom}\t{start}\t{end}\t{sv_type}\t{sv_len}\t{region}\t{rptype}\t{round(pcrt, 2)}', file=exbnd_bed_writer)
+
             elif sv_type == 'TRA' or sv_type == 'BND':
                 bnd_counter += 1
                 print(line.strip(), file=noalt_vcf_writer)
@@ -200,7 +198,6 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, exclude_dict, re
                 print(line.strip(), file=others_writer)
             else:
                 print(line.strip(), file=others_writer)
-                # print(f'{chrom}\t{start}\t{end}\t{sv_type}\t{sv_len}\t{region}\t{rptype}\t{round(pcrt, 2)}', file=exbnd_bed_writer)
 
 
             all_sv_list.append((chrom, start, start + 1, sv_type, -1, sv_id))
@@ -218,7 +215,6 @@ def split_svtypes_to_files(input_vcf, noalt_vcf, caller, minsr, exclude_dict, re
 
     return count_dict, svtype_by_region
 
-
 def obtain_reads_hq_insdel():
     caller_supp = 5
 
@@ -235,7 +231,7 @@ def obtain_reads_hq_insdel():
             sr4_caller_vcfs = f'{WORKDIR}/{plat}/{dataset}_callers_sr4_vcf_path.txt'
             sr4_caller_writer = open(sr4_caller_vcfs, 'w')
 
-            for caller in CALLERS:
+            for caller in READCALLERS:
                 vcf_path = f'{WORKDIR}/{plat}/minimap2_{dataset}/filtered/HG002.{caller}.{svtype}.vcf'
 
                 print(vcf_path, file=sr4_caller_writer)
@@ -243,6 +239,9 @@ def obtain_reads_hq_insdel():
             sr4_caller_writer.close()
 
             merged_caller_dir = f'{WORKDIR}/{plat}/read_callers_merged'
+
+            if not os.path.exists(merged_caller_dir):
+                os.mkdir(merged_caller_dir)
 
             print(f' ==== Merge {svtype} on {dataset} ==== ')
             caller_sr4_merged_vcf = f'{merged_caller_dir}/{dataset}_{svtype}_callers_minimap2_merged.vcf'
@@ -289,7 +288,7 @@ def obtain_confident_calls(merged_vcf, workdir, dataset, svtype, supp_callers, s
             callers = []
             for i, val in enumerate(supp_vec):
                 if val == '1':
-                    callers.append(TOOLMAP[CALLERS[i]])
+                    callers.append(TOOLMAP[READCALLERS[i]])
 
             merged_id = entries[2]
 
@@ -334,3 +333,55 @@ def obtain_confident_calls(merged_vcf, workdir, dataset, svtype, supp_callers, s
         print(f'{supp}\t{count}', file=extd_supp_writer)
 
     extd_supp_writer.close()
+
+def annotate_sv_region(chrom, start, end, pcrt_thresh, simreps_tabix, rmsk_tabix, sd_tabix):
+    if start > end:
+        start, end = end, start
+    size = end - start + 1
+    annotations = []
+
+    if 'chr' not in chrom:
+        chrom = f'chr{chrom}'
+
+    for simrep in simreps_tabix.fetch(chrom, start, end):
+        entries = simrep.strip().split('\t')
+        rp_start, rp_end, rp_info = int(entries[1]), int(entries[2]), entries[3]
+        overlap_size = get_overlaps(start, end, rp_start, rp_end)
+
+        if overlap_size > 0:
+            motif = rp_info.split(',')[-1]
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            subtype = 'VNTR' if len(motif) >= 7 else 'STR'
+            if overlap_pcrt >= pcrt_thresh:
+                annotations.append(('Tandem Repeats', subtype, overlap_pcrt))
+                return ('Tandem Repeats', subtype, overlap_pcrt)
+
+    for rmsk in rmsk_tabix.fetch(chrom, start, end):
+        entries = rmsk.strip().split('\t')
+        rp_start, rp_end, rp_info = int(entries[1]), int(entries[2]), entries[4]
+        overlap_size = get_overlaps(start, end, rp_start, rp_end)
+        if overlap_size > 0:
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            rptype = rp_info.split(',')[11]
+            if overlap_pcrt >= pcrt_thresh:
+                if rptype == 'Simple_repeat':
+                    motif = rptype[1: -2]
+                    subtype = 'VNTR' if len(motif) >= 7 else 'STR'
+                    annotations.append(('Tandem Repeats', subtype, overlap_pcrt))
+                    return ('Tandem Repeats', subtype, overlap_pcrt)
+                annotations.append(('Repeat Masked', rptype, overlap_pcrt))
+
+    for sd in sd_tabix.fetch(chrom, start, end):
+        entries = sd.strip().split('\t')
+        sd_start, sd_end, sd_mate_coord = int(entries[1]), int(entries[2]), entries[3]
+        overlap_size = get_overlaps(start, end, sd_start, sd_end)
+        if overlap_size > 0:
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            annotations.append(('Segment Dup', 'SegDup', overlap_pcrt))
+
+    if len(annotations) == 0:
+        return ('Simple Region', 'None', 0)
+
+    sorted_annotations = sorted(annotations, key=lambda x:x[1], reverse=True)
+
+    return sorted_annotations[0]

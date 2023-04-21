@@ -16,7 +16,6 @@ import gzip
 import pandas as pd
 
 from Helpers.Functions import *
-from Helpers.Annot import *
 from Helpers.Constant import *
 
 def process_assembly_calls():
@@ -34,48 +33,61 @@ def process_assembly_calls():
     hifi_assemblers = ['hifiasm', 'flye']
 
     pav_count_info = []
+
     pav_count_info_by_regions = []
 
-    split_pav_vcf(hifi_datasets, hifi_assemblers, pav_count_info, pav_count_info_by_regions,
+    split_pav_vcf(hifi_datasets, hifi_assemblers, 'minimap2', pav_count_info, pav_count_info_by_regions,
                   simple_reps, rmsk, sds, exclude_dict)
 
-    split_pav_vcf(ont_datasets, ont_assemblers, pav_count_info, pav_count_info_by_regions,
+
+    split_pav_vcf(ont_datasets, ont_assemblers, 'lra', pav_count_info, pav_count_info_by_regions,
                   simple_reps, rmsk, sds, exclude_dict)
 
-    df_svcounts = pd.DataFrame(pav_count_info, columns=['caller', 'dataset', 'assembler', 'total', 'ins_num', 'del_num', 'inv_num', 'cmrg_num', 'highconf_num'])
+    split_pav_vcf(ont_datasets, ont_assemblers, 'minimap2', pav_count_info, pav_count_info_by_regions,
+                  simple_reps, rmsk, sds, exclude_dict)
+
+
+    df_svcounts = pd.DataFrame(pav_count_info, columns=['caller', 'dataset', 'assembler', 'total', 'ins_num', 'del_num', 'inv_num'])
     df_svcounts.to_csv(f'{WORKDIR}/pav_sv_counts.tsv', sep='\t', header=True, index=False)
 
-    df_svnum_regions = pd.DataFrame(pav_count_info_by_regions, columns=['assembler', 'dataset', 'region', 'svtype', 'count'])
+    df_svnum_regions = pd.DataFrame(pav_count_info_by_regions,columns=['assembler', 'dataset', 'region', 'svtype', 'count'])
     df_svnum_regions.to_csv(f'{WORKDIR}/pav_sv_counts_region.tsv', sep='\t', header=True, index=False)
 
     svimasm_count_info = []
     svimasm_count_info_by_regions = []
 
-    split_svimasm_vcf(hifi_datasets, hifi_assemblers, svimasm_count_info, svimasm_count_info_by_regions,
+    split_svimasm_vcf(hifi_datasets, hifi_assemblers, 'minimap2', svimasm_count_info, svimasm_count_info_by_regions,
                       simple_reps, rmsk, sds, exclude_dict)
 
-    split_svimasm_vcf(ont_datasets, ont_assemblers, svimasm_count_info,
+    split_svimasm_vcf(ont_datasets, ont_assemblers, 'minimap2', svimasm_count_info,
                       svimasm_count_info_by_regions, simple_reps, rmsk, sds, exclude_dict)
 
-    df_svcounts = pd.DataFrame(svimasm_count_info,columns=['caller', 'dataset', 'assembler', 'total', 'ins_num', 'del_num', 'inv_num', 'cmrg_num', 'highconf_num'])
+    df_svcounts = pd.DataFrame(svimasm_count_info,columns=['caller', 'dataset', 'aligner', 'assembler', 'total', 'ins_num', 'del_num', 'inv_num'])
     df_svcounts.to_csv(f'{WORKDIR}/svimasm_sv_counts.tsv', sep='\t', header=True, index=False)
 
-    df_svnum_regions = pd.DataFrame(svimasm_count_info_by_regions, columns=['assembler', 'dataset', 'region', 'svtype', 'count'])
+    df_svnum_regions = pd.DataFrame(svimasm_count_info_by_regions, columns=['assembler', 'aligner', 'dataset', 'region', 'svtype', 'count'])
     df_svnum_regions.to_csv(f'{WORKDIR}/svimasm_sv_counts_region.tsv', sep='\t', header=True, index=False)
 
+    ## Adding experiment suggested by Reviewer #2
+    split_pav_vcf(['hifi_18kb'], hifi_assemblers, 'lra', pav_count_info, pav_count_info_by_regions,
+                  simple_reps, rmsk, sds, exclude_dict)
 
-def split_pav_vcf(datasets, assemblers, sv_counts_info, sv_counts_by_regions,  simple_reps, rmsk, sds, exclude_dict):
+    split_svimasm_vcf(['hifi_18kb'], hifi_assemblers, 'lra', svimasm_count_info, svimasm_count_info_by_regions,
+                      simple_reps, rmsk, sds, exclude_dict)
 
-    aligner = 'minimap2'
+    split_svimasm_vcf(ont_datasets, ont_assemblers, 'lra', svimasm_count_info, svimasm_count_info_by_regions, simple_reps, rmsk, sds, exclude_dict)
+
+
+def split_pav_vcf(datasets, assemblers, aligner, sv_counts_info, sv_counts_by_regions,  simple_reps, rmsk, sds, exclude_dict):
+
     svtypes = ['ins', 'del', 'inv']
 
     for assembler in assemblers:
         for dataset in datasets:
             current_dir = f'{WORKDIR}/HiFi'
-            pav_vcf = f'{current_dir}/{aligner}_{dataset}/raw_calls/pav_HG002.{assembler}.vcf.gz'
             if 'ont' in dataset:
                 current_dir = f'{WORKDIR}/ONT'
-                pav_vcf = f'{current_dir}/{aligner}_{dataset}/raw_calls/pav_HG002.{assembler}.vcf.gz'
+            pav_vcf = f'{current_dir}/{aligner}_{dataset}/raw_calls/pav_HG002.{assembler}.vcf.gz'
 
             total_num = 0
 
@@ -90,14 +102,14 @@ def split_pav_vcf(datasets, assemblers, sv_counts_info, sv_counts_by_regions,  s
 
             ins_writer = open(f'{current_dir}/{aligner}_{dataset}/filtered/HG002.pav.{assembler}.ins.vcf', 'w')
             del_writer = open(f'{current_dir}/{aligner}_{dataset}/filtered/HG002.pav.{assembler}.del.vcf', 'w')
-            inv_writer = open(f'{current_dir}/{aligner}_{dataset}/filtered/HG002.pav.{assembler}.inv.vcf', 'w')
+            # inv_writer = open(f'{current_dir}/{aligner}_{dataset}/filtered/HG002.pav.{assembler}.inv.vcf', 'w')
 
             with gzip.open(pav_vcf, 'rt') as f:
                 for line in f:
                     if '#' in line:
                         print(line.strip(), file=ins_writer)
                         print(line.strip(), file=del_writer)
-                        print(line.strip(), file=inv_writer)
+                        # print(line.strip(), file=inv_writer)
                         print(line.strip(), file=pav_sv_vcf)
                         continue
 
@@ -134,6 +146,8 @@ def split_pav_vcf(datasets, assemblers, sv_counts_info, sv_counts_by_regions,  s
 
                     region, rptype, pcrt = annotate_sv_region(chrom, start, end, 0, simple_reps, rmsk, sds)
 
+                    total_num += 1
+
                     if svtype == 'INS':
                         ins_counter += 1
 
@@ -159,36 +173,30 @@ def split_pav_vcf(datasets, assemblers, sv_counts_info, sv_counts_by_regions,  s
                         print(line.strip(), file=pav_sv_vcf)
                         print(f'{chrom}\t{start}\t{end}\tDEL\t{svlen}\t{region}\t{rptype}\t{round(pcrt, 2)}', file=bed_writer)
 
+                        svtype_by_region[region][svtype] += 1
+
                     elif svtype == 'INV':
                         inv_counter += 1
-                        print(line.strip(), file=inv_writer)
+                        # print(line.strip(), file=inv_writer)
                         print(line.strip(), file=pav_sv_vcf)
                         print(f'{chrom}\t{start}\t{end}\tINV\t{svlen}\t{region}\t{rptype}\t{round(pcrt, 2)}', file=bed_writer)
 
-                total_num += 1
+                        svtype_by_region[region][svtype] += 1
 
             for region, sv_num in svtype_by_region.items():
                 for svtype, count in sv_num.items():
                     sv_counts_by_regions.append((assembler, dataset, region, svtype, count))
 
-            sv_counts_info.append(('pav', dataset, assembler, total_num, ins_counter, del_counter, inv_counter))
+            if 'hifi' in dataset:
+                sv_counts_info.append(('pav', dataset, assembler, total_num, ins_counter, del_counter, inv_counter))
+            elif aligner == 'lra' and 'ont' in dataset:
+                sv_counts_info.append(('pav', dataset, assembler, total_num, ins_counter, del_counter, inv_counter))
 
-            print(f'Writing pav-minimap2-{dataset} #SVs: {total_num}')
+            print(f'Writing pav-{assembler}-{aligner}-{dataset} #SVs: {total_num}')
 
-            ins_writer.close()
-            del_writer.close()
-            inv_writer.close()
-            pav_sv_vcf.close()
 
-    df_svcounts = pd.DataFrame(sv_counts_info, columns=['caller', 'dataset', 'assembler', 'total', 'ins_num', 'del_num', 'inv_num'])
-    df_svcounts.to_csv(f'{WORKDIR}/pav_sv_counts.tsv', sep='\t', header=True, index=False)
 
-    df_svnum_regions = pd.DataFrame(sv_counts_by_regions, columns=['assembler', 'dataset', 'region', 'svtype', 'count'])
-    df_svnum_regions.to_csv(f'{WORKDIR}/pav_sv_counts_region.tsv', sep='\t', header=True, index=False)
-
-def split_svimasm_vcf(datasets, assemblers, sv_counts_info, sv_counts_by_regions, simple_reps, rmsk, sds, exclude_dict):
-
-    aligner = 'minimap2'
+def split_svimasm_vcf(datasets, assemblers, aligner, sv_counts_info, sv_counts_by_regions, simple_reps, rmsk, sds, exclude_dict):
 
     svtypes = ['ins', 'del', 'inv']
 
@@ -196,12 +204,9 @@ def split_svimasm_vcf(datasets, assemblers, sv_counts_info, sv_counts_by_regions
         for dataset in datasets:
 
             current_dir = f'{WORKDIR}/HiFi'
-            input_vcf = f'{current_dir}/{aligner}_{dataset}/raw_calls/variants.{assembler}.vcf'
             if 'ont' in dataset:
                 current_dir = f'{WORKDIR}/ONT'
-                input_vcf = f'{current_dir}/{aligner}_{dataset}/raw_calls/variants.{assembler}.vcf'
-
-            print(f'Processing svimasm-{assembler}-{dataset} ...')
+            input_vcf = f'{current_dir}/{aligner}_{dataset}/raw_calls/variants.{assembler}.vcf'
 
             total_num = 0
             ins_counter, del_counter, inv_counter = 0, 0, 0
@@ -291,22 +296,16 @@ def split_svimasm_vcf(datasets, assemblers, sv_counts_info, sv_counts_by_regions
 
             for region, sv_num in svtype_by_region.items():
                 for svtype, count in sv_num.items():
-                    sv_counts_by_regions.append((assembler, dataset, region, svtype, count))
+                    sv_counts_by_regions.append((assembler, aligner, dataset, region, svtype, count))
 
-            sv_counts_info.append(('svimasm', dataset, assembler, total_num, ins_counter, del_counter, inv_counter))
+            sv_counts_info.append(('svimasm', dataset, aligner, assembler, total_num, ins_counter, del_counter, inv_counter))
+            print(f'Writing svimasm-{assembler}-{aligner}-{dataset} #SVs: {total_num}')
 
             del_writer.close()
             ins_writer.close()
             inv_writer.close()
             filtered_vcf_writer.close()
             filtered_bed_writer.close()
-
-
-    df_svcounts = pd.DataFrame(sv_counts_info,columns=['caller', 'dataset', 'assembler', 'total', 'ins_num', 'del_num', 'inv_num'])
-    df_svcounts.to_csv(f'{WORKDIR}/svimasm_sv_counts.tsv', sep='\t', header=True, index=False)
-
-    df_svnum_regions = pd.DataFrame(sv_counts_by_regions, columns=['assembler', 'dataset', 'region', 'svtype', 'count'])
-    df_svnum_regions.to_csv(f'{WORKDIR}/svimasm_sv_counts_region.tsv', sep='\t', header=True, index=False)
 
 def obtain_assm_hq_insdel():
 
@@ -333,9 +332,9 @@ def obtain_assm_hq_insdel():
             caller_vcf_path = f'{merged_caller_dir}/{dataset}_callers_sa2_vcf_path.txt'
             caller_vcf_path_writer = open(caller_vcf_path, 'w')
 
-            for caller in ASMCALLERS:
-                vcf_path = f'{WORKDIR}/{plat}/minimap2_{dataset}/filtered/HG002.{caller}.{assembler}.{svtype}.vcf'
-                print(vcf_path, file=caller_vcf_path_writer)
+
+            print(f'{WORKDIR}/{plat}/lra_{dataset}/filtered/HG002.pav.{assembler}.{svtype}.vcf', file=caller_vcf_path_writer)
+            print(f'{WORKDIR}/{plat}/minimap2_{dataset}/filtered/HG002.svimasm.{assembler}.{svtype}.vcf',file=caller_vcf_path_writer)
 
             caller_vcf_path_writer.close()
 
@@ -353,9 +352,6 @@ def obtain_confident_calls(merged_vcf, workdir, dataset, svtype, assembler, supp
     suppvec_dict = {}
     merged_total = 0
     extd_supp_vec_dict = {}
-
-    suppvec_info = {}
-    extd_suppvec_info = {}
 
     extd_merged_vcf = open(f'{workdir}/{dataset}_{svtype}_callers_{assembler}_merged.extd.vcf', 'w')
     scs_merged_vcf = open(f'{workdir}/{dataset}_{svtype}_callers_{assembler}_merged.sc{supp_callers}.vcf', 'w')
@@ -380,13 +376,7 @@ def obtain_confident_calls(merged_vcf, workdir, dataset, svtype, assembler, supp
 
             supp = int(info_dict['SUPP'])
             supp_vec = info_dict['SUPP_VEC']
-            callers = []
-            for i, val in enumerate(supp_vec):
-                if val == '1':
-                    callers.append(TOOLMAP[CALLERS[i]])
-
-            chrom, merged_id = entries[0], entries[2]
-            suppvec_info[merged_id] = ','.join(callers)
+            # chrom, merged_id = entries[0], entries[2]
 
             if supp_vec in suppvec_dict:
                 suppvec_dict[supp_vec] += 1
@@ -403,8 +393,6 @@ def obtain_confident_calls(merged_vcf, workdir, dataset, svtype, assembler, supp
 
             if region_label != 'Tandem Repeats':
                 print(line.strip(), file=extd_merged_vcf)
-
-                extd_suppvec_info[merged_id] = ','.join(callers)
 
                 if supp_vec in extd_supp_vec_dict:
                     extd_supp_vec_dict[supp_vec] += 1
@@ -427,3 +415,55 @@ def obtain_confident_calls(merged_vcf, workdir, dataset, svtype, assembler, supp
         print(f'{supp}\t{count}', file=extd_supp_writer)
 
     extd_supp_writer.close()
+
+def annotate_sv_region(chrom, start, end, pcrt_thresh, simreps_tabix, rmsk_tabix, sd_tabix):
+    if start > end:
+        start, end = end, start
+    size = end - start + 1
+    annotations = []
+
+    if 'chr' not in chrom:
+        chrom = f'chr{chrom}'
+
+    for simrep in simreps_tabix.fetch(chrom, start, end):
+        entries = simrep.strip().split('\t')
+        rp_start, rp_end, rp_info = int(entries[1]), int(entries[2]), entries[3]
+        overlap_size = get_overlaps(start, end, rp_start, rp_end)
+
+        if overlap_size > 0:
+            motif = rp_info.split(',')[-1]
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            subtype = 'VNTR' if len(motif) >= 7 else 'STR'
+            if overlap_pcrt >= pcrt_thresh:
+                annotations.append(('Tandem Repeats', subtype, overlap_pcrt))
+                return ('Tandem Repeats', subtype, overlap_pcrt)
+
+    for rmsk in rmsk_tabix.fetch(chrom, start, end):
+        entries = rmsk.strip().split('\t')
+        rp_start, rp_end, rp_info = int(entries[1]), int(entries[2]), entries[4]
+        overlap_size = get_overlaps(start, end, rp_start, rp_end)
+        if overlap_size > 0:
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            rptype = rp_info.split(',')[11]
+            if overlap_pcrt >= pcrt_thresh:
+                if rptype == 'Simple_repeat':
+                    motif = rptype[1: -2]
+                    subtype = 'VNTR' if len(motif) >= 7 else 'STR'
+                    annotations.append(('Tandem Repeats', subtype, overlap_pcrt))
+                    return ('Tandem Repeats', subtype, overlap_pcrt)
+                annotations.append(('Repeat Masked', rptype, overlap_pcrt))
+
+    for sd in sd_tabix.fetch(chrom, start, end):
+        entries = sd.strip().split('\t')
+        sd_start, sd_end, sd_mate_coord = int(entries[1]), int(entries[2]), entries[3]
+        overlap_size = get_overlaps(start, end, sd_start, sd_end)
+        if overlap_size > 0:
+            overlap_pcrt = min(overlap_size / size * 100, 100)
+            annotations.append(('Segment Dup', 'SegDup', overlap_pcrt))
+
+    if len(annotations) == 0:
+        return ('Simple Region', 'None', 0)
+
+    sorted_annotations = sorted(annotations, key=lambda x:x[1], reverse=True)
+
+    return sorted_annotations[0]
