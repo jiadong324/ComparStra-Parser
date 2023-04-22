@@ -250,10 +250,10 @@ def prepare_data():
             tmp_file_writer.close()
 
             merged_out_vcf = f'{outdir}/{caller}.{dataset}.jasmine.merged.vcf'
-            print(f'\tObtain {caller} {dataset} assembler uniques and overlaps ...')
+            print(f'Obtain {caller} {dataset} assembler uniques and overlaps ...')
             cmd = f'{JASMINE} file_list={tmp_file} out_file={merged_out_vcf} max_dist=1000 spec_len=50 spec_reads=1 > {outdir}/jasmine.callers.log'
             os.system(cmd)
-            print(f'Annotating {caller} {dataset} ...')
+            # print(f'Annotating {caller} {dataset} ...')
             get_assembler_compare_info(plat_assemblers[plat], merged_out_vcf, outdir, caller, simple_reps, rmsk, sds)
             os.remove(tmp_file)
 
