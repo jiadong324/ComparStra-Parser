@@ -535,7 +535,7 @@ def main():
 
     print('\n==== Creating Extended Data Fig 3a, 3b and 3c =====')
     plot_s3a(f'{FIGDIR}/FigS3')
-    print(f'Figures saved to {FIGDIR}/FigS3/figs3a-1.pdf; {FIGDIR}/FigS2/figs3a-2.pdf')
+    print(f'Figures saved to {FIGDIR}/FigS3/figs3a-1.pdf; {FIGDIR}/FigS3/figs3a-2.pdf')
 
     plot_s3b(f'{FIGDIR}/FigS3')
     print(f'Figures saved to {FIGDIR}/FigS3/figs3b.pdf')
