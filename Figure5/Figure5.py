@@ -7,20 +7,25 @@
 
 @contact: jiadong324@gmail.com
 
-@time: 2023/2/21
+@time: 2023/4/18
 
 '''
+
+import os
+import sys
+import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 import seaborn as sns
 from matplotlib.patches import Patch
 from matplotlib.lines import Line2D
-from matplotlib_venn import venn2, venn3
 
+from matplotlib_venn import venn2
 
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from Helpers.Functions import *
 from Helpers.Constant import *
+from Helpers.Functions import get_survivor_supp, get_survivor_suppvec
 
 sns.set_theme(style="ticks", font="Arial", font_scale=1.0)
 
@@ -36,10 +41,9 @@ plt.rcParams["ytick.labelsize"] = 11
 
 plt.rcParams["axes.linewidth"] = 2
 
+def plot_5a5b(figdir):
 
-def figure5a_5b(workdir):
-
-    df_wgs = pd.read_csv(f'{workdir}/HG002/truvari/assembly_read_truvari.tsv', sep='\t', header=[0])
+    df_wgs = pd.read_csv(f'{WORKDIR}/truvari/assembly_read_truvari.tsv', sep='\t', header=[0])
 
     stra_order = ['Assembly', 'Read']
     stra_color = [STRACOLORS[ele] for ele in stra_order]
@@ -73,8 +77,9 @@ def figure5a_5b(workdir):
 
     fig.tight_layout()
 
-    df_cmrg = pd.read_csv(f'{workdir}/HG002/CMRGs/truvari_results/assembly_read_cmrgs_truvari.tsv', sep='\t',
-                          header=[0])
+    fig.savefig(f'{figdir}/fig5a.pdf')
+
+    df_cmrg = pd.read_csv(f'{WORKDIR}/CMRGs/assembly_read_cmrgs_truvari.tsv', sep='\t', header=[0])
 
     fig, axes = plt.subplots(1, 2, sharex='col', sharey='row', figsize=(6, 3))
     sns.boxplot(data=df_cmrg, x='recall', y='dataset', hue='strategy', hue_order=stra_order, palette=stra_color,
@@ -104,10 +109,12 @@ def figure5a_5b(workdir):
         ax.legend(handles=stra_legends)
 
     fig.tight_layout()
-    plt.show()
+    fig.savefig(f'{figdir}/fig5b.pdf')
+    # plt.show()
 
 
-def figure5c_5d(workdir, merge_type):
+def plot_5c5d(figdir, merge_type):
+
     plats = {'HiFi': ('HiFi-10kb', 'HiFi-15kb', 'HiFi-18kb'), 'ONT':('ONT-9kb', 'ONT-19kb', 'ONT-30kb')}
     stras = ['read', 'assm']
 
@@ -128,8 +135,8 @@ def figure5c_5d(workdir, merge_type):
         for col_idx, stra in enumerate(stras):
 
 
-            merged = f'{workdir}/HG002/CMRGs/truvari_results/plat_compare/{stra}.{plat}.{merge_type}.merged.vcf'
-            supp, merged_total = get_survivor_suppvec(merged)
+            merged = f'{WORKDIR}/CMRGs/plat_compare/{stra}.{plat}.{merge_type}.merged.vcf'
+            supp, merged_total = get_survivor_supp(merged)
 
             supp_counts[0][col_idx] += supp[3]
             supp_counts[1][col_idx] += supp[2]
@@ -164,10 +171,12 @@ def figure5c_5d(workdir, merge_type):
 
     fig.tight_layout()
 
+    fig.savefig(f'{figdir}/fig5c-{merge_type}.pdf')
+
     for plat in plats:
         fig, ax = plt.subplots(1, 1, figsize=(4, 3))
         ax.set_title(plat, fontsize=13)
-        merged = f'{workdir}/HG002/CMRGs/truvari_results/stra_compare/stra.{plat}.{merge_type}s.merged.vcf'
+        merged = f'{WORKDIR}/CMRGs/stra_compare/stra.{plat}.{merge_type}s.merged.vcf'
         supp_vec, merged_total = get_survivor_suppvec(merged)
         n_10, n_01, n_11 = 0, 0, 0
         if '10' in supp_vec:
@@ -181,34 +190,21 @@ def figure5c_5d(workdir, merge_type):
 
         venn2(subsets={'10': n_10, '01': n_01, '11': n_11}, set_labels=('Read', 'Assembly'), ax=ax)
         fig.tight_layout()
-
-    fig, ax = plt.subplots(1, 1, figsize=(4, 3))
-    merged = f'{workdir}/HG002/CMRGs/truvari_results/plat_compare/read.plat.{merge_type}s.merged.vcf'
-    supp_vec, merged_total = get_survivor_suppvec(merged)
-    venn2(subsets={'10': supp_vec['10'], '01': supp_vec['01'], '11': supp_vec['11']}, set_labels=('HiFi', 'ONT'), ax=ax)
-    fig.tight_layout()
-    plt.show()
-
-    fig, ax = plt.subplots(1, 1, figsize=(4, 3))
-    merged = f'{workdir}/HG002/CMRGs/truvari_results/plat_compare/assm.plat.{merge_type}s.merged.vcf'
-    supp_vec, merged_total = get_survivor_suppvec(merged)
-    venn2(subsets={'10': supp_vec['10'], '01': supp_vec['01'], '11': supp_vec['11']}, set_labels=('HiFi', 'ONT'), ax=ax)
-    fig.tight_layout()
-
-    plt.show()
+        fig.savefig(f'{figdir}/fig5d-{plat}-{merge_type}s.venn.pdf')
 
 
-def figure5e(workdir):
 
-    df_diffcov = pd.read_csv(f'{workdir}/HG002/CMRGs/truvari_results/stra_diffcov_truvari.tsv', sep='\t', header=[0])
+def plot_5e(figdir):
+
+    df_diffcov = pd.read_csv(f'{WORKDIR}/CMRGs/stra_diffcov_truvari.tsv', sep='\t', header=[0])
 
     plat_stra_rp = {'HiFi': {'Assembly': {'35X':[[], []], '5X':[[], []]}, 'Read': {'35X':[[], []], '5X':[[], []]}},
                'ONT': {'Assembly': {'35X':[[], []], '5X':[[], []]}, 'Read': {'35X':[[], []], '5X':[[], []]}}}
 
-    plat_caller_rp = {'HiFi': {TOOLMAP[caller]: [0, 0] for caller in CALLERS},
-                      'ONT': {TOOLMAP[caller]: [0, 0] for caller in CALLERS}}
+    plat_caller_rp = {'HiFi': {TOOLMAP[caller]: [0, 0] for caller in READCALLERS},
+                      'ONT': {TOOLMAP[caller]: [0, 0] for caller in READCALLERS}}
 
-    read_based_callers = [TOOLMAP[ele] for ele in CALLERS]
+    read_based_callers = [TOOLMAP[ele] for ele in READCALLERS]
     for idx, row in df_diffcov.iterrows():
         cov, stra, recall, precision, plat, caller = row['coverage'], row['stra'], float(row['recall']), float(row['precision']), row['plat'], row['caller']
         if cov in ['35X', '5X']:
@@ -268,21 +264,21 @@ def figure5e(workdir):
         ax.grid(axis='y', ls='--', color='grey', lw=1.5)
 
     fig.tight_layout()
+    fig.savefig(f'{figdir}/fig5e.pdf')
+    # plt.show()
 
-    plt.show()
 
+def plot_5f(figdir):
 
-def figure5f(workdir):
-
-    df_diffcov = pd.read_csv(f'{workdir}/HG002/CMRGs/truvari_results/stra_diffcov_truvari.tsv', sep='\t', header=[0])
+    df_diffcov = pd.read_csv(f'{WORKDIR}/CMRGs/stra_diffcov_truvari.tsv', sep='\t', header=[0])
 
     plat_stra_rp = {'HiFi': {'Assembly': {'35X':[[], []], '5X':[[], []]}, 'Read': {'35X':[[], []], '5X':[[], []]}},
                'ONT': {'Assembly': {'35X':[[], []], '5X':[[], []]}, 'Read': {'35X':[[], []], '5X':[[], []]}}}
 
-    plat_caller_rp = {'HiFi': {TOOLMAP[caller]: [0, 0] for caller in CALLERS},
-                      'ONT': {TOOLMAP[caller]: [0, 0] for caller in CALLERS}}
+    plat_caller_rp = {'HiFi': {TOOLMAP[caller]: [0, 0] for caller in READCALLERS},
+                      'ONT': {TOOLMAP[caller]: [0, 0] for caller in READCALLERS}}
 
-    read_based_callers = [TOOLMAP[ele] for ele in CALLERS]
+    read_based_callers = [TOOLMAP[ele] for ele in READCALLERS]
     for idx, row in df_diffcov.iterrows():
         cov, stra, recall, precision, plat, caller = row['coverage'], row['stra'], float(row['recall']), float(row['precision']), row['plat'], row['caller']
         if cov in ['35X', '5X']:
@@ -293,7 +289,7 @@ def figure5f(workdir):
             plat_caller_rp[plat][caller][0] += recall
             plat_caller_rp[plat][caller][1] += precision
 
-    caller_legends = [Line2D([0], [0], color='white', mec='black', marker=TOOLMARKERS[ele], label=TOOLMAP[ele], ms=10) for ele in CALLERS]
+    caller_legends = [Line2D([0], [0], color='white', mec='black', marker=TOOLMARKERS[ele], label=TOOLMAP[ele], ms=10) for ele in READCALLERS]
 
     plat_legends = [Patch(label='HiFi', color=PLATCOLORS['HiFi']), Patch(label='ONT', color=PLATCOLORS['ONT'])]
     caller_legends.extend(plat_legends)
@@ -302,9 +298,6 @@ def figure5f(workdir):
     for plat, call_rp in plat_caller_rp.items():
         for caller, (recall, precision) in call_rp.items():
             ax.scatter(recall, precision, color=PLATCOLORS[plat], marker=TOOLMARKERS2[caller], s=150)
-
-    ax.scatter(0.86, 0.63, color=PLATCOLORS['ONT'], marker='*', s=300)
-    ax.scatter(0.86, 0.90, color=PLATCOLORS['HiFi'], marker='*', s=300)
 
     ax.legend(handles=caller_legends)
 
@@ -322,4 +315,29 @@ def figure5f(workdir):
     ax.set_yticklabels([int(val * 100) for val in np.linspace(0.2, 1, 5)], fontsize=12)
 
     fig.tight_layout()
-    plt.show()
+    fig.savefig(f'{figdir}/fig5f.pdf')
+    # plt.show()
+
+def main():
+    print('\n===== Creating Figure 5 =====')
+
+    if not os.path.exists(f'{FIGDIR}/Fig5'):
+        os.mkdir(f'{FIGDIR}/Fig5')
+
+    plot_5a5b(f'{FIGDIR}/Fig5')
+    print(f'Figures saved to {FIGDIR}/Fig5/fig5a.pdf; {FIGDIR}/Fig5/fig5b.pdf')
+
+    plot_5c5d(f'{FIGDIR}/Fig5', 'fp')
+    print(f'Figures saved to {FIGDIR}/Fig5/fig5c-fp.pdf; {FIGDIR}/Fig5/fig5b-HiFi-fps.venn.pdf; {FIGDIR}/Fig5/fig5b-ONT-fps.venn.pdf')
+
+    plot_5c5d(f'{FIGDIR}/Fig5', 'fn')
+    print(f'Figures saved to {FIGDIR}/Fig5/fig5c-fn.pdf; {FIGDIR}/Fig5/fig5b-HiFi-fns.venn.pdf; {FIGDIR}/Fig5/fig5b-ONT-fns.venn.pdf')
+
+    plot_5e(f'{FIGDIR}/Fig5')
+    print(f'Figures saved to {FIGDIR}/Fig5/fig5e.pdf')
+
+    plot_5f(f'{FIGDIR}/Fig5')
+    print(f'Figures saved to {FIGDIR}/Fig5/fig5f.pdf')
+
+if __name__ == '__main__':
+    main()
