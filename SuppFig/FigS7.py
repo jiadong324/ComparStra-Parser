@@ -261,11 +261,10 @@ def main():
     if not os.path.exists(f'{FIGDIR}/FigS7'):
         os.mkdir(f'{FIGDIR}/FigS7')
 
-    plot_s7a7b(f'{FIGDIR}/FigS7')
-    print(f'Figures saved to {FIGDIR}/Fig5/figs7ab-*-*-*.pdf')
+    print(f'All panels are under: {FIGDIR}/FigS7')
 
+    plot_s7a7b(f'{FIGDIR}/FigS7')
     plot_s7c(f'{FIGDIR}/FigS7')
-    print(f'Figures saved to {FIGDIR}/Fig5/figs7c-1.pdf; {FIGDIR}/Fig5/figs7c-2.pdf; {FIGDIR}/Fig5/figs7c-3.pdf; {FIGDIR}/Fig5/figs7c-4.pdf')
 
 if __name__ == '__main__':
     main()

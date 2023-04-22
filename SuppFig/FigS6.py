@@ -218,7 +218,7 @@ def plot_s6c(figdir):
             invalid_counter[plat][svtype] = invalid_count
             valid_total[plat][svtype] = total_valid_svs
 
-            print(f'{plat}: {svtype} error rate: {error_rate}. Valid total SVs: {total_valid_svs}')
+            # print(f'{plat}: {svtype} error rate: {error_rate}. Valid total SVs: {total_valid_svs}')
 
             df_scores = pd.DataFrame(trio_scores, columns=['score', 'sample', 'plat'])
 
