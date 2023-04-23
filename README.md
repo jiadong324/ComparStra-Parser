@@ -3,44 +3,37 @@
 
 Evaluating the impact of assemblers, aligners, sequencer and read length on read-based and assembly-based SV detection.
 
-## Datasets
-
-| Dataset | Description | Source | 
-| --- | ----------- | ---- |
-| HiFi-10kb | 10kb average read length | GIAB [FTP](https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/HG002_NA24385_son/PacBio_CCS_10kb/)|
-| HiFi-15kb | 15kb average read length | GIAB [FTP](https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/HG002_NA24385_son/PacBio_CCS_15kb/)|
-| HiFi-18kb | 18kb average read length| SRA Acession IDs: SRR18239004, SRR18239005, SRR18239006 and SRR18239007|
-| ONT-9kb | 9kb average read length | GIAB [FTP](https://ftp-trace.ncbi.nlm.nih.gov/ReferenceSamples/giab/data/AshkenazimTrio/HG002_NA24385_son/UCSC_Ultralong_OxfordNanopore_Promethion/) |
-| ONT-19kb | 19kb average read length | SRA Acession ID: SRR18363746|
-| ONT-30kb | 30kb average read length | SRA Acession ID: SRR18363752 and SRR18363753|
-
 ## Analysis workflow
 
 ### Overview 
 
 The major parts involved in the comparison are listed below:
-1. For each strategy, we assessed the impact of dataset, aligner and assembler on the detection variability.
+1. Using six long read datasets ([details](https://github.com/jiadong324/ComparStra-Parser/wiki)), we assessed the impact of dataset, aligner and assembler on the detection variability.
 2. On each dataset, 20 read-based callsets and four assembly-based callsets were compared to assess the impact of aligner and assembler.
 3. Based on the analysis of 2, we build high-confident insertions and deletions (insdel) callsets of read and assembly. The high-confident insdel callsets are then compared.
 4. Benchmarking 20 read-based and eight assembly-based detection piplines with well curate SVs of HG002 released by GIAB.
 
+### SV detection
+
 Please check the wiki page for more details about [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
 
+**NOTE:** The raw VCF files of all callers among six datasets are available for reproducing the figures ([reproduce_data](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/EXUTUeFyB_9Gun_BN6iQv9sBlufTQ9Vad09qv6-krzcSQg?e=viXM6h)).
 
 ### Analysis environment
 
 #### Required files
 
-**NOTE:** Please specify the working directory and the path of required files in ```Constant.py```.
-
 Hg19 reference genome hs37d5.fa.
-Hg19 excluded regions grch37.exclude_regions_cen.bed.
 
-Please refer [CAMPHOR](https://github.com/afujimoto/CAMPHOR) to download and process the original repeat files. The files listed below will be used in the analysis.
+Please refer [CAMPHOR](https://github.com/afujimoto/CAMPHOR) for the process of original repeat files.
+The files listed below will be used in the analysis ([hg19_repeats](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/ERUKiATizJxJr7xlTCEr3eQBx_Knl3HdvlDLnXK0nxS2xQ?e=Lhd2az)).
 
 1) Simple repeat file including STR and VNTR (simplerepeat.bed.gz). 
 2) Segmental duplication file (seg_dup.bed.gz).
 3) Repeat masker file including LINE, SINE and etc (rmsk.bed.gz).
+4) Hg19 excluded regions (grch37.exclude_regions_cen.bed).
+
+**NOTE:** Please specify the working directory and the path of required files in ```./Helpers/Constant.py```.
 
 #### Required tools and packages
 
