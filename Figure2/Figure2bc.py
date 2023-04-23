@@ -474,7 +474,7 @@ def main():
     print('\nPrepare data for Figure 2b and 2c =====')
     print(f'Intermediate file directory: {WORKDIR}/fig2b2c_tmpfile')
 
-    # prepare_data()
+    prepare_data()
 
     if not os.path.exists(f'{FIGDIR}/Fig2'):
         os.mkdir(f'{FIGDIR}/Fig2')

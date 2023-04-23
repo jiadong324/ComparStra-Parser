@@ -722,8 +722,8 @@ def annotate_sv_region1(chrom, start, end, pcrt_thresh, simreps_tabix, rmsk_tabi
 def main():
     print('\n===== Prepare data for Figure 2d and 2e =====')
     print(f'Intermediate file directory: {WORKDIR}/dataset_fig2d2e_tmpfile')
-    prepare_data()
 
+    prepare_data()
 
     if not os.path.exists(f'{FIGDIR}/Fig2'):
         os.mkdir(f'{FIGDIR}/Fig2')
