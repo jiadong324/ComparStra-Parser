@@ -21,20 +21,6 @@ Please check the wiki page for more details about [SV detection](https://github.
 
 ### Analysis environment
 
-#### Required files
-
-Hg19 reference genome hs37d5.fa.
-
-Please refer [CAMPHOR](https://github.com/afujimoto/CAMPHOR) for the process of original repeat files.
-The files listed below will be used in the analysis ([hg19_repeats](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/ERUKiATizJxJr7xlTCEr3eQBx_Knl3HdvlDLnXK0nxS2xQ?e=Lhd2az)).
-
-1) Simple repeat file including STR and VNTR (simplerepeat.bed.gz). 
-2) Segmental duplication file (seg_dup.bed.gz).
-3) Repeat masker file including LINE, SINE and etc (rmsk.bed.gz).
-4) Hg19 excluded regions (grch37.exclude_regions_cen.bed).
-
-**NOTE:** Please specify the working directory and the path of required files in ```./Helpers/Constant.py```.
-
 #### Required tools and packages
 
 ```
@@ -69,11 +55,38 @@ pip install intervaltree==3.1.0
 conda config --add channels bioconda
 conda config --add channels conda-forge
 conda install jasminesv
+```
 
+#### Required files
+
+Hg19 reference genome hs37d5.fa.
+
+Please refer [CAMPHOR](https://github.com/afujimoto/CAMPHOR) for the process of original repeat files.
+The files listed below will be used in the analysis (download [hg19_repeats](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/ERUKiATizJxJr7xlTCEr3eQBx_Knl3HdvlDLnXK0nxS2xQ?e=Lhd2az) and unzip).
+
+1) Simple repeat file including STR and VNTR (simplerepeat.bed.gz). 
+2) Segmental duplication file (seg_dup.bed.gz).
+3) Repeat masker file including LINE, SINE and etc (rmsk.bed.gz).
+4) Hg19 excluded regions (grch37.exclude_regions_cen.bed).
+
+**NOTE:** Unzip ```reproduce_data.zip```, and the default work directory is ./reproduce_data/.
+Then, the following variables should be specified in ```./Helpers/Constant.py```.
+
+```
+WORKDIR = '/path/to/reproduce_data'
+FIGDIR = '/path/to/reproduce_data/Figures'
+
+HG19REF = '/path/to/hs37d5.fa'
+EXREGIONS = '/path/to/hg19_repeats/grch37.exclude_regions_cen.bed'
+SIMREP = '/path/to/hg19_repeats/simplerepeat.bed.gz'
+RMSK = '/path/to/hg19_repeats/rmsk.bed.gz'
+SD = '/path/to/hg19_repeats/seg_dup.bed.gz'
+
+SAMTOOLS = '/path/to/samtools'
+JASMINE = '/path/to/jasmine'
 ```
 
 ### Reproducing results
-
 
 **NOTE:** Please run the scripts by the order listed below. 
 
