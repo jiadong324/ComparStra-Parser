@@ -59,10 +59,10 @@ conda install jasminesv
 
 #### Required files
 
-Hg19 reference genome hs37d5.fa.
+Hg19 reference genome hs37d5.fa ([download](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/EZYGFU7ciV1Bm39ki65cZ6QB82HB0pOeAFvZh2p7pYT0FA?e=apow7q)).
 
 Please refer [CAMPHOR](https://github.com/afujimoto/CAMPHOR) for the process of original repeat files.
-The files listed below will be used in the analysis (download [hg19_repeats](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/ERUKiATizJxJr7xlTCEr3eQBx_Knl3HdvlDLnXK0nxS2xQ?e=Lhd2az) and unzip).
+Download [hg19_repeats](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/ERUKiATizJxJr7xlTCEr3eQBx_Knl3HdvlDLnXK0nxS2xQ?e=Lhd2az) and the files listed below will be used in the analysis.
 
 1) Simple repeat file including STR and VNTR (simplerepeat.bed.gz). 
 2) Segmental duplication file (seg_dup.bed.gz).
