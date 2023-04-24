@@ -115,7 +115,11 @@ def plot_2a(figdir):
     fig.savefig(f'{figdir}/fig2a.pdf')
     # plt.show()
 
+
+
+
 def main():
+
     print('\n===== Prepare data for Figure 2d and 2e =====')
     print(f'Intermediate files include: '
           f'\n{WORKDIR}/caller_sv_counts_region.tsv'
