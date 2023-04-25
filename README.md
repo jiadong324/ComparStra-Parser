@@ -5,7 +5,7 @@ Evaluating the impact of assemblers, aligners, sequencer and read length on read
 
 ## Analysis workflow
 
-Please check the [wiki](https://github.com/jiadong324/ComparStra-Parser/wiki) page for more details about working directory structure, [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
+Please check the wiki page for more details about [working directory structure](https://github.com/jiadong324/ComparStra-Parser/wiki/Working-directory), [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
 
 ### Overview 
 
