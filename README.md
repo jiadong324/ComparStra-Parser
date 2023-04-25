@@ -15,7 +15,7 @@ The major parts involved in the comparison are listed below:
 
 ### Project files at Zenodo
 
-Please check the wiki page for more details about [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
+Please check the [wiki](https://github.com/jiadong324/ComparStra-Parser/wiki) page for more details about working directory structure, [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
 
 There are 12 separate zip files to download from Zenodo ([![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7856049.svg)](https://doi.org/10.5281/zenodo.7856049)
 ).
