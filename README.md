@@ -45,6 +45,8 @@ Unzip ```hg19_repeats.zip``` to get files listed below that are used in the anal
 
 The above files from 1-10 are also available at OneDrive ([reproduce_data.zip](https://stuxjtueducn-my.sharepoint.com/:f:/g/personal/pengjia_stu_xjtu_edu_cn/EnORz16WyTpEtWGWCT8IziUB8Rtm_x-iUGm2UQ4u6bV5Sw?e=MhMGxB)).
 
+Unzip ```reproduce_data.zip``` and you will get all files under the working directory ```reproduce_data```.
+
 ### Analysis environment
 
 #### Required tools and packages
