@@ -13,11 +13,34 @@ The major parts involved in the comparison are listed below:
 3. Based on the analysis of 2, we build high-confident insertions and deletions (insdel) callsets of read and assembly. The high-confident insdel callsets are then compared.
 4. Benchmarking 20 read-based and eight assembly-based detection piplines with well curate SVs of HG002 released by GIAB.
 
-### SV detection
+### Project files at Zenodo
 
 Please check the wiki page for more details about [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
 
-**NOTE:** The raw VCF files of all callers among six datasets are available for reproducing the figures ([reproduce_data](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/EXUTUeFyB_9Gun_BN6iQv9sBlufTQ9Vad09qv6-krzcSQg?e=viXM6h)).
+There are 12 separate zip files to download from Zenodo ([![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7856049.svg)](https://doi.org/10.5281/zenodo.7856049)
+).
+
+1. ```lra_ont_9kb.zip```
+2. ```lra_ont_19kb.zip```
+3. ```lra_ont_30kb.zip```
+4. ```minimap2_ont_9kb.zip```
+5. ```minimap2_ont_19kb.zip```
+6. ```minimap2_ont_30kb.zip```
+7. ```other_files_under_ONT.zip```
+8. ```HiFi dataset calls.zip```
+9. ```CMRGs.zip```
+10. ```truvari.zip```
+11. ```hg19_ref.zip```
+12. ```hg19_repeats.zip```
+
+Unzip ```hg19_ref.zip``` to get Hg19 reference genome hs37d5.fa.
+
+Unzip ```hg19_repeats.zip``` to get files listed below that are used in the analysis. Please refer [CAMPHOR](https://github.com/afujimoto/CAMPHOR) to get more details for processing the repeat files.
+
+1) Simple repeat file including STR and VNTR (simplerepeat.bed.gz). 
+2) Segmental duplication file (seg_dup.bed.gz).
+3) Repeat masker file including LINE, SINE and etc (rmsk.bed.gz).
+4) Hg19 excluded regions (grch37.exclude_regions_cen.bed).
 
 ### Analysis environment
 
@@ -57,20 +80,12 @@ conda config --add channels conda-forge
 conda install jasminesv
 ```
 
-#### Required files
 
-Hg19 reference genome hs37d5.fa ([download](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/EZYGFU7ciV1Bm39ki65cZ6QB82HB0pOeAFvZh2p7pYT0FA?e=apow7q)).
+### Reproducing results
 
-Please refer [CAMPHOR](https://github.com/afujimoto/CAMPHOR) for the process of original repeat files.
-Download [hg19_repeats](https://stuxjtueducn-my.sharepoint.com/:u:/g/personal/jiadong66_stu_xjtu_edu_cn/ERUKiATizJxJr7xlTCEr3eQBx_Knl3HdvlDLnXK0nxS2xQ?e=Lhd2az) and the files listed below will be used in the analysis.
+#### Setup variables
 
-1) Simple repeat file including STR and VNTR (simplerepeat.bed.gz). 
-2) Segmental duplication file (seg_dup.bed.gz).
-3) Repeat masker file including LINE, SINE and etc (rmsk.bed.gz).
-4) Hg19 excluded regions (grch37.exclude_regions_cen.bed).
-
-**NOTE:** Unzip ```reproduce_data.zip```, and the default work directory is ./reproduce_data/.
-Then, the following variables should be specified in ```./Helpers/Constant.py```.
+Please assign the absolute path to the following variables in ```./Helpers/Constant.py```
 
 ```
 WORKDIR = '/path/to/reproduce_data'
@@ -85,8 +100,6 @@ SD = '/path/to/hg19_repeats/seg_dup.bed.gz'
 SAMTOOLS = '/path/to/samtools'
 JASMINE = '/path/to/jasmine'
 ```
-
-### Reproducing results
 
 **NOTE:** Please run the scripts by the order listed below. 
 
