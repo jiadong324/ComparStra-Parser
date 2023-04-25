@@ -20,6 +20,7 @@ Please check the wiki page for more details about [SV detection](https://github.
 There are 12 separate zip files to download from Zenodo ([![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7856049.svg)](https://doi.org/10.5281/zenodo.7856049)
 ).
 
+
 1. ```lra_ont_9kb.zip```
 2. ```lra_ont_19kb.zip```
 3. ```lra_ont_30kb.zip```
@@ -41,6 +42,8 @@ Unzip ```hg19_repeats.zip``` to get files listed below that are used in the anal
 2) Segmental duplication file (seg_dup.bed.gz).
 3) Repeat masker file including LINE, SINE and etc (rmsk.bed.gz).
 4) Hg19 excluded regions (grch37.exclude_regions_cen.bed).
+
+The above files from 1-10 are also available at OneDrive ([reproduce_data.zip](https://stuxjtueducn-my.sharepoint.com/:f:/g/personal/pengjia_stu_xjtu_edu_cn/EnORz16WyTpEtWGWCT8IziUB8Rtm_x-iUGm2UQ4u6bV5Sw?e=MhMGxB)).
 
 ### Analysis environment
 
