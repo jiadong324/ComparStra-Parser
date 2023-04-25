@@ -5,6 +5,8 @@ Evaluating the impact of assemblers, aligners, sequencer and read length on read
 
 ## Analysis workflow
 
+Please check the [wiki](https://github.com/jiadong324/ComparStra-Parser/wiki) page for more details about working directory structure, [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
+
 ### Overview 
 
 The major parts involved in the comparison are listed below:
@@ -14,8 +16,6 @@ The major parts involved in the comparison are listed below:
 4. Benchmarking 20 read-based and eight assembly-based detection piplines with well curate SVs of HG002 released by GIAB.
 
 ### Project files at Zenodo
-
-Please check the [wiki](https://github.com/jiadong324/ComparStra-Parser/wiki) page for more details about working directory structure, [SV detection](https://github.com/jiadong324/ComparStra-Parser/wiki/SV-detection) and [benchmarking](https://github.com/jiadong324/ComparStra-Parser/wiki/HG002-benchmarking).
 
 There are 12 separate zip files to download from Zenodo ([![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.7856049.svg)](https://doi.org/10.5281/zenodo.7856049)
 ).
